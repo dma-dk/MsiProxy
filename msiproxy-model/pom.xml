@@ -11,8 +11,6 @@
 
     <artifactId>msiproxy-model</artifactId>
     <packaging>jar</packaging>
+    <name>Standalone MSI-NM model</name>
 
-    <dependencies>
-
-    </dependencies>
 </project>

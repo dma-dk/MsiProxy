@@ -1,18 +1,19 @@
 package dk.dma.msiproxy.dkprovider.service;
 
-import dk.dma.msiproxy.dkprovider.conf.DkMsiDB;
+import dk.dma.msiproxy.model.msi.Message;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.cache.NoCache;
 
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import java.sql.SQLException;
+import java.util.List;
 
 /**
- * Created by peder on 06/01/2015.
+ * Provides a REST interface for accessing Danish legacy MSI messages
  */
 @Singleton
 @Startup
@@ -20,30 +21,18 @@ import java.sql.SQLException;
 public class DkProviderRestService {
 
     @Inject
-    @DkMsiDB
-    EntityManager em;
+    DkProviderService providerService;
 
     /**
      * Returns the legacy import status
      */
     @GET
-    @Path("/test")
-    @Produces("application/json")
-    public String getMessageCount() throws SQLException {
-
-        return em.createNativeQuery("select count(*) from message").getSingleResult().toString();
-
-        /**
-        StringBuilder result = new StringBuilder();
-        Session session = em.unwrap(Session.class);
-        session.doWork(connection -> {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("select count(*) from message");
-            rs.next();
-            result.append("ROWS " + rs.getInt(1));
-        });
-        return result.toString();
-         **/
+    @Path("/active")
+    @Produces({"application/json;charset=UTF-8", "application/xml;charset=UTF-8" })
+    @GZIP
+    @NoCache
+    public List<Message> getActiveMessages() {
+        return providerService.getActiveMessages();
     }
 
 }
