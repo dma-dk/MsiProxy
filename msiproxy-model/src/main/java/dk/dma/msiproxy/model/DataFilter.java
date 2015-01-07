@@ -53,6 +53,43 @@ public class DataFilter {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DataFilter that = (DataFilter) o;
+
+        if (!fields.equals(that.fields)) return false;
+        if (lang != null ? !lang.equals(that.lang) : that.lang != null) return false;
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int result = fields.hashCode();
+        result = 31 * result + (lang != null ? lang.hashCode() : 0);
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "DataFilter{" +
+                "fields=" + fields +
+                ", lang='" + lang + '\'' +
+                '}';
+    }
+
+    /**
      * Constructor
      * @param fields enlisting of what should be copied
      */

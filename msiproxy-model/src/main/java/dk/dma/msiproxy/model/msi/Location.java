@@ -15,6 +15,7 @@
  */
 package dk.dma.msiproxy.model.msi;
 
+import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
 
@@ -39,6 +40,27 @@ public class Location extends LocalizedEntity<Location.LocationDesc> {
     public Location() {
         super();
     }
+
+    /**
+     * Constructor
+     * @param location the location
+     * @param dataFilter what type of data to include from the entity
+     */
+    public Location(Location location, DataFilter dataFilter) {
+        this();
+
+        type = location.getType();
+        radius = location.getRadius();
+        if (location.getPoints() != null) {
+            location.getPoints()
+                    .forEach(point -> checkCreatePoints().add(new Point(point, dataFilter)));
+        }
+        if (location.getDescs() != null) {
+            location.getDescs(dataFilter).stream()
+                    .forEach(desc -> checkCreateDescs().add(desc));
+        }
+    }
+
 
     /**
      * Returns or creates the list of points

@@ -1,0 +1,38 @@
+<html>
+<head>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+</head>
+<body>
+<header>
+    <h1>MSI-NM test page</h1>
+</header>
+
+<a href id="test">TEST</a>
+
+<div id="msiList" style="width: 500px; border: 1px solid red">
+    result
+</div>
+
+
+<script>
+    $(document).ready(function() {
+        console.log("Ready");
+        $('#test').click(function(e) {
+            // stop the form to be submitted...
+            e.preventDefault();
+            console.log("Fetch active messages");
+            $.getJSON(
+                    'http://10.0.0.108:8080/rest/dk/messages/active',
+                    function(data) {
+                        console.log("Received messages");
+                        $('#msiList').html(
+                                '&lt;h2&gt;Behold my messages&lt;/h2&gt;'
+                                + '&lt;p&gt;' + JSON.stringify(data) + '&lt;/p&gt;');
+                    });
+        });
+    });
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@
  */
 package dk.dma.msiproxy.model.msi;
 
+import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
 
@@ -59,6 +60,56 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
      * Constructor
      */
     public Message() {
+    }
+
+    /**
+     * Constructor
+     * @param message the message
+     * @param dataFilter what type of data to include from the entity
+     */
+    public Message(Message message, DataFilter dataFilter) {
+        this();
+
+        DataFilter compFilter = dataFilter.forComponent(Message.class);
+
+        id = message.getId();
+        updated = message.getUpdated();
+
+        seriesIdentifier = message.getSeriesIdentifier();
+        type = message.getType();
+        validFrom = message.getValidFrom();
+        validTo = message.getValidTo();
+
+        if (message.getDescs() != null && compFilter.includeAnyOf("details", "MessageDesc.title")) {
+            message.getDescs(compFilter).stream()
+                    .forEach(desc -> checkCreateDescs().add(desc));
+        }
+
+        if (message.getLocations() != null && compFilter.includeAnyOf("details", "locations")) {
+            message.getLocations().forEach(loc -> checkCreateLocations().add(new Location(loc, compFilter)));
+        }
+
+        if (compFilter.include("details")) {
+            created = message.getCreated();
+            version = message.getVersion();
+            area = (message.getArea() == null) ? null : new Area(message.getArea(), compFilter);
+            status = message.getStatus();
+            if (message.getCategories() != null) {
+                message.getCategories().forEach(cat -> checkCreateCategories().add(new Category(cat, compFilter)));
+            }
+            if (message.getCharts() != null) {
+                checkCreateCharts().addAll(message.getCharts());
+            }
+            horizontalDatum = message.getHorizontalDatum();
+            cancellationDate = message.getCancellationDate();
+            if (message.getReferences() != null) {
+                checkCreateReferences().addAll(message.getReferences());
+            }
+            if (message.getLightsListNumbers().size() > 0) {
+                checkCreateLightsListNumbers().addAll(message.getLightsListNumbers());
+            }
+            originalInformation = message.getOriginalInformation();
+        }
     }
 
     /**
@@ -285,7 +336,7 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
         this.lightsListNumbers = lightsListNumbers;
     }
 
-    public Boolean isOriginalInformation() {
+    public Boolean getOriginalInformation() {
         return originalInformation;
     }
 

@@ -15,6 +15,7 @@
  */
 package dk.dma.msiproxy.model.msi;
 
+import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
 
@@ -35,7 +36,6 @@ import java.util.List;
 public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<Area> {
     Integer id;
     Area parent;
-    List<Location> locations;
     List<Area> children;
     double sortOrder;
 
@@ -46,14 +46,28 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
     }
 
     /**
-     * Returns or creates the list of locations
-     * @return the list of locations
+     * Constructor
+     * @param area the area
+     * @param dataFilter what type of data to include from the entity
      */
-    public List<Location> checkCreateLocations() {
-        if (locations == null) {
-            locations = new ArrayList<>();
+    public Area(Area area, DataFilter dataFilter) {
+        this();
+
+        DataFilter compFilter = dataFilter.forComponent(Area.class);
+
+        id = area.getId();
+        sortOrder = area.getSortOrder();
+
+        if (compFilter.includeChildren() && area.getChildren() != null) {
+            area.getChildren().forEach(child -> checkCreateChildren().add(new Area(child, compFilter)));
+        } else if (compFilter.includeParent() && area.getParent() != null) {
+            parent = new Area(area.getParent(), compFilter);
         }
-        return locations;
+
+        if (area.getDescs() != null) {
+            area.getDescs(compFilter).stream()
+                    .forEach(desc -> checkCreateDescs().add(desc));
+        }
     }
 
     /**
@@ -105,15 +119,6 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
 
     public void setParent(Area parent) {
         this.parent = parent;
-    }
-
-    @XmlTransient
-    public List<Location> getLocations() {
-        return locations;
-    }
-
-    public void setLocations(List<Location> locations) {
-        this.locations = locations;
     }
 
     @XmlTransient
