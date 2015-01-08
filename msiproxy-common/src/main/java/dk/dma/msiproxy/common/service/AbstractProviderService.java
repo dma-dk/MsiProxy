@@ -1,7 +1,9 @@
 package dk.dma.msiproxy.common.service;
 
-import dk.dma.msiproxy.model.DataFilter;
+import dk.dma.msiproxy.model.MessageFilter;
 import dk.dma.msiproxy.model.msi.Message;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.infinispan.Cache;
 
 import java.util.List;
@@ -10,15 +12,11 @@ import java.util.stream.Collectors;
 
 /**
  * An abstract base class for MSI providers.
- * <p>
- *     The implementing class should be annotated with {@code @Singleton}.
- *     Furthermore, it should call {@code init()} in a {@code @PostConstruct} method
- *     and {@code destroy()} in a {@code @PreDestroy} method.
- * </p>
  */
 public abstract class AbstractProviderService {
 
     protected List<Message> messages = new CopyOnWriteArrayList<>();
+    protected long fetchTime = -1L;
 
     /**
      * Returns a unique id for the implementing provider service
@@ -42,30 +40,71 @@ public abstract class AbstractProviderService {
 
 
     /**
-     * Returns the list of active legacy MSI messages
-     * @return the list of active legacy MSI messages
+     * Returns the full list of active legacy MSI messages
+     * @return the full list of active legacy MSI messages
      */
-    public List<Message> getActiveMessages() {
+    public synchronized List<Message> getActiveMessages() {
         return messages;
     }
 
     /**
+     * Updates the full list of active MSI messages
+     * @param messages the new full list of active MSI messages
+     */
+    protected synchronized void setActiveMessages(List<Message> messages) {
+        this.messages = new CopyOnWriteArrayList<>(messages);
+        this.fetchTime = System.currentTimeMillis();
+        getCache().clear();
+    }
+
+    /**
+     * Returns the key to use for caching messages defined by the given filter
+     * @param filter the message filter
+     * @return the key to use for caching messages defined by the given filter
+     */
+    public String getCacheKey(MessageFilter filter) {
+        return String.format(
+                "%s_%d_%s",
+                getProviderId(),
+                fetchTime,
+                filter.getKey()
+        );
+    }
+
+    /**
+     * Computes an ETag token for the given message list
+     * @param format the format to return the messages in
+     * @param filter the message filter
+     * @param messages the list of messages to compute an ETag token for
+     * @return an ETag token for the given message list
+     */
+    public String getETagToken(String format, MessageFilter filter, List<Message> messages) {
+        return DigestUtils.md5Hex(
+                String.format(
+                    "%s_%s_%s",
+                    StringUtils.defaultString(format),
+                    messages.stream()
+                            .map(msg -> msg.getId().toString() + msg.getUpdated().getTime())
+                            .collect(Collectors.joining()),
+                    getCacheKey(filter)
+                )
+        );
+    }
+
+    /**
      * Returns a filtered view of the message list
-     * @param dataFilter the data filter
+     * @param filter the data filter
      * @return the messages
      */
-    public List<Message> getCachedMessages(DataFilter dataFilter) {
-        if (dataFilter == null) {
+    public List<Message> getCachedMessages(MessageFilter filter) {
+        if (filter == null || filter.isEmpty()) {
             return messages;
         }
 
-        String cacheKey = dataFilter.toString();
+        String cacheKey = getCacheKey(filter);
         List<Message> result = getCache().get(cacheKey);
         if (result == null) {
-            result = new CopyOnWriteArrayList<>();
-            result.addAll(messages.stream()
-                    .map(msg -> new Message(msg, dataFilter))
-                    .collect(Collectors.toList()));
+            result = filter.filter(messages);
             getCache().put(cacheKey, result);
         }
         return result;

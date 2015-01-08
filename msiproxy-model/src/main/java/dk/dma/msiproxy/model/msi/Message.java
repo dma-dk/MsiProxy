@@ -15,9 +15,10 @@
  */
 package dk.dma.msiproxy.model.msi;
 
-import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
+import dk.dma.msiproxy.model.MessageFilter;
+import org.apache.commons.lang.StringUtils;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -65,12 +66,10 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
     /**
      * Constructor
      * @param message the message
-     * @param dataFilter what type of data to include from the entity
+     * @param filter what type of data to include from the entity
      */
-    public Message(Message message, DataFilter dataFilter) {
+    public Message(Message message, MessageFilter filter) {
         this();
-
-        DataFilter compFilter = dataFilter.forComponent(Message.class);
 
         id = message.getId();
         updated = message.getUpdated();
@@ -80,22 +79,22 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
         validFrom = message.getValidFrom();
         validTo = message.getValidTo();
 
-        if (message.getDescs() != null && compFilter.includeAnyOf("details", "MessageDesc.title")) {
-            message.getDescs(compFilter).stream()
+        if (message.getDescs() != null) {
+            message.getDescs(filter).stream()
                     .forEach(desc -> checkCreateDescs().add(desc));
         }
 
-        if (message.getLocations() != null && compFilter.includeAnyOf("details", "locations")) {
-            message.getLocations().forEach(loc -> checkCreateLocations().add(new Location(loc, compFilter)));
-        }
+        if (filter.isDetailed()) {
+            if (message.getLocations() != null) {
+                message.getLocations().forEach(loc -> checkCreateLocations().add(new Location(loc, filter)));
+            }
 
-        if (compFilter.include("details")) {
             created = message.getCreated();
             version = message.getVersion();
-            area = (message.getArea() == null) ? null : new Area(message.getArea(), compFilter);
+            area = (message.getArea() == null) ? null : new Area(message.getArea(), filter);
             status = message.getStatus();
             if (message.getCategories() != null) {
-                message.getCategories().forEach(cat -> checkCreateCategories().add(new Category(cat, compFilter)));
+                message.getCategories().forEach(cat -> checkCreateCategories().add(new Category(cat, filter)));
             }
             if (message.getCharts() != null) {
                 checkCreateCharts().addAll(message.getCharts());
@@ -105,10 +104,15 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
             if (message.getReferences() != null) {
                 checkCreateReferences().addAll(message.getReferences());
             }
-            if (message.getLightsListNumbers().size() > 0) {
+            if (message.getLightsListNumbers() != null && message.getLightsListNumbers().size() > 0) {
                 checkCreateLightsListNumbers().addAll(message.getLightsListNumbers());
             }
             originalInformation = message.getOriginalInformation();
+        }
+
+        // Sort the message according to the language
+        if (StringUtils.isNotBlank(filter.getLang())) {
+            sortByLang(filter.getLang());
         }
     }
 

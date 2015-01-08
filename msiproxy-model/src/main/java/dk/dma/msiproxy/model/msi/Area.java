@@ -15,9 +15,9 @@
  */
 package dk.dma.msiproxy.model.msi;
 
-import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
+import dk.dma.msiproxy.model.MessageFilter;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -48,24 +48,21 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
     /**
      * Constructor
      * @param area the area
-     * @param dataFilter what type of data to include from the entity
+     * @param filter what type of data to include from the entity
      */
-    public Area(Area area, DataFilter dataFilter) {
+    public Area(Area area, MessageFilter filter) {
         this();
-
-        DataFilter compFilter = dataFilter.forComponent(Area.class);
 
         id = area.getId();
         sortOrder = area.getSortOrder();
 
-        if (compFilter.includeChildren() && area.getChildren() != null) {
-            area.getChildren().forEach(child -> checkCreateChildren().add(new Area(child, compFilter)));
-        } else if (compFilter.includeParent() && area.getParent() != null) {
-            parent = new Area(area.getParent(), compFilter);
+        // NB: We only copy parent Areas, not children
+        if (area.getParent() != null) {
+            parent = new Area(area.getParent(), filter);
         }
 
         if (area.getDescs() != null) {
-            area.getDescs(compFilter).stream()
+            area.getDescs(filter).stream()
                     .forEach(desc -> checkCreateDescs().add(desc));
         }
     }

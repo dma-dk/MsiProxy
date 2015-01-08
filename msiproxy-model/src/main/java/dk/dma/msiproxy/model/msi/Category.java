@@ -15,9 +15,9 @@
  */
 package dk.dma.msiproxy.model.msi;
 
-import dk.dma.msiproxy.model.DataFilter;
 import dk.dma.msiproxy.model.LocalizedDesc;
 import dk.dma.msiproxy.model.LocalizedEntity;
+import dk.dma.msiproxy.model.MessageFilter;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -46,23 +46,20 @@ public class Category extends LocalizedEntity<Category.CategoryDesc> {
     /**
      * Constructor
      * @param category the category
-     * @param dataFilter what type of data to include from the entity
+     * @param filter what type of data to include from the entity
      */
-    public Category(Category category, DataFilter dataFilter) {
+    public Category(Category category, MessageFilter filter) {
         this();
-
-        DataFilter compFilter = dataFilter.forComponent(Category.class);
 
         id = category.getId();
 
-        if (compFilter.includeChildren() && category.getChildren() != null) {
-            category.getChildren().forEach(child -> checkCreateChildren().add(new Category(child, compFilter)));
-        } else if (compFilter.includeParent() && category.getParent() != null) {
-            parent = new Category(category.getParent(), compFilter);
+        // NB: We only copy parent Areas, not children
+        if (category.getParent() != null) {
+            parent = new Category(category.getParent(), filter);
         }
 
         if (category.getDescs() != null) {
-            category.getDescs(compFilter).stream()
+            category.getDescs(filter).stream()
                     .forEach(desc -> checkCreateDescs().add(desc));
         }
     }

@@ -41,7 +41,7 @@ import java.util.List;
 public class MessageCache {
 
     final static long LIFESPAN = 30 * 60 * 1000;   // 30 minutes
-    final static int MAX_ENTRIES = 20000;          // at most 20.000 messages
+    final static int MAX_ENTRIES = 20000;          // at most 20.000 entries
 
     protected CacheContainer cacheContainer;
 

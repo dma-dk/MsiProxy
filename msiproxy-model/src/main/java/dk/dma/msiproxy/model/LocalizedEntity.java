@@ -47,19 +47,19 @@ public abstract class LocalizedEntity<D extends LocalizedDesc> implements JsonSe
      *     If no description matches the filter, the first available description is included.
      * </p>
      *
-     * @param dataFilter defines the languages to include from the entity
+     * @param filter defines the languages to include from the entity
      * @return the list of localized descriptions as specified by the data filter
      */
-    public List<D> getDescs(DataFilter dataFilter) {
+    public List<D> getDescs(MessageFilter filter) {
         // Sanity checks
-        if (dataFilter == null || getDescs() == null) {
+        if (filter == null || getDescs() == null) {
             return getDescs();
         }
 
         // Collect the matching descriptions
         List<D> result = new ArrayList<>();
         getDescs().stream()
-                .filter(dataFilter::includeLang)
+                .filter(desc -> filter.getLang() == null || filter.getLang().equals(desc.getLang()))
                 .forEach(result::add);
 
         // If no match is found, pick the first available

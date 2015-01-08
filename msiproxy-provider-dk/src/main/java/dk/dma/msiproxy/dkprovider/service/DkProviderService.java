@@ -32,6 +32,8 @@ import java.util.concurrent.Future;
 @Startup
 public class DkProviderService extends AbstractProviderService {
 
+    public static final String PROVIDER_ID = "dk_msi";
+
     @Inject
     Logger log;
 
@@ -47,7 +49,7 @@ public class DkProviderService extends AbstractProviderService {
      */
     @Override
     public String getProviderId() {
-        return "dk_msi";
+        return PROVIDER_ID;
     }
 
     /**
@@ -84,15 +86,14 @@ public class DkProviderService extends AbstractProviderService {
 
         long t0 = System.currentTimeMillis();
         try {
-            String url ="https://msinm-test.e-navigation.net/rest/messages/published?lang=en&sortBy=AREA&sortOrder=ASC";
+            String url ="https://msinm-test.e-navigation.net/rest/messages/published?sortBy=AREA&sortOrder=ASC";
             URLConnection con = new URL(url).openConnection();
             con.setConnectTimeout(5000); //  5 seconds
             con.setReadTimeout(10000);   // 10 seconds
 
             try (InputStream is = con.getInputStream()) {
                 MessageSearchResult searchResult = JsonUtils.fromJson(is, MessageSearchResult.class);
-                messages = new CopyOnWriteArrayList<>(searchResult.getMessages());
-                getCache().clear();
+                setActiveMessages(searchResult.getMessages());
                 log.info(String.format("Loaded %d messages in %s ms", messages.size(), System.currentTimeMillis() - t0));
             }
 
