@@ -82,6 +82,17 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
      * {@inheritDoc}
      */
     @Override
+    public AreaDesc createDesc(String lang) {
+        AreaDesc desc = new AreaDesc();
+        desc.setLang(lang);
+        checkCreateDescs().add(desc);
+        return desc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int compareTo(Area area) {
         return (area == null || sortOrder == area.getSortOrder()) ? 0 : (sortOrder < area.getSortOrder() ? -1 : 1);
     }

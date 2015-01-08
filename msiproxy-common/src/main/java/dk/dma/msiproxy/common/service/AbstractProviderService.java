@@ -109,4 +109,11 @@ public abstract class AbstractProviderService {
         }
         return result;
     }
+
+    /**
+     * Implemented by subclasses. Loads the messages from the data source
+     * @return the resulting list of messages
+     */
+    public abstract List<Message> loadMessages();
+
 }

@@ -36,7 +36,7 @@ public abstract class LocalizedDesc implements JsonSerializable {
      * Sets the language of this descriptive entity
      * @param lang the language of this descriptive entity
      */
-    void setLang(String lang) {
+    public void setLang(String lang) {
         this.lang = lang;
     }
 

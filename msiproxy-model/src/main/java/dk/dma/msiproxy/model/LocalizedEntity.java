@@ -98,6 +98,31 @@ public abstract class LocalizedEntity<D extends LocalizedDesc> implements JsonSe
     }
 
     /**
+     * Creates the localized description for the given language
+     * and adds it to the list of description entities.
+     *
+     * @param lang the language
+     * @return the created description
+     */
+    public abstract D createDesc(String lang);
+
+
+    /**
+     * Returns the localized description for the given language.
+     * Creates a new description entity if none exists in advance.
+     *
+     * @param lang the language
+     * @return the localized description for the given language
+     */
+    public D checkCreateDesc(String lang) {
+        D desc = getDesc(lang);
+        if (desc == null) {
+            desc = createDesc(lang);
+        }
+        return desc;
+    }
+
+    /**
      * Sorts the descriptive entities to ensure that the given language is first
      * @param lang the language to sort first
      */

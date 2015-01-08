@@ -42,7 +42,7 @@ public enum Status {
      */
     CANCELLED,
 
-    /**
+    Status, /**
      * The state of a draft that has been deleted
      */
     DELETED

@@ -57,6 +57,18 @@ public class Point extends LocalizedEntity<Point.PointDesc> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PointDesc createDesc(String lang) {
+        PointDesc desc = new PointDesc();
+        desc.setLang(lang);
+        checkCreateDescs().add(desc);
+        return desc;
+    }
+
+
     public Double getLat() {
         return lat;
     }

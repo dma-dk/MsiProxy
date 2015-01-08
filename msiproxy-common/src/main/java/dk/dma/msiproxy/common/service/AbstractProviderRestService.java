@@ -41,6 +41,7 @@ public abstract class AbstractProviderRestService {
      * Returns the active MSI messages in the requested format and language.
      *
      * @param request the JAX-RS request
+     * @param refresh whether to force a refresh of the data or not
      * @param format either "json" (default) or "xml"
      * @param lang the requested language, either "da" (default) or "en"
      * @param details whether to include message details or not
@@ -51,6 +52,7 @@ public abstract class AbstractProviderRestService {
      */
     public Response getActiveMessages(
             Request request,
+            boolean refresh,
             String format,
             String lang,
             boolean details,
@@ -60,6 +62,12 @@ public abstract class AbstractProviderRestService {
     ) {
 
         try {
+            // Check if we need to refresh the data
+            if (refresh) {
+                getProviderService().loadMessages();
+            }
+
+            // Fetch the filtered set of data
             MessageFilter filter = new MessageFilter()
                     .lang(lang)
                     .detailed(details)

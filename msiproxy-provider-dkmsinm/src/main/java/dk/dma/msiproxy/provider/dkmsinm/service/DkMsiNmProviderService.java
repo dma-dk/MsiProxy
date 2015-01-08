@@ -7,7 +7,6 @@ import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.AsyncResult;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Schedule;
@@ -18,7 +17,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
-import java.util.concurrent.Future;
 
 /**
  * Provides a business interface for accessing Danish MSI-NM messages
@@ -70,10 +68,10 @@ public class DkMsiNmProviderService extends AbstractProviderService {
     }
 
     /**
-     * Loads the MSI messages asynchronously
-     * @return the resulting list of messages
+     * {@inheritDoc}
      */
-    public Future<List<Message>> loadMessages() {
+    @Override
+    public List<Message> loadMessages() {
 
         long t0 = System.currentTimeMillis();
         try {
@@ -92,6 +90,6 @@ public class DkMsiNmProviderService extends AbstractProviderService {
             log.error("Failed loading messages: " + e.getMessage());
         }
 
-        return new AsyncResult<>(messages);
+        return messages;
     }
 }

@@ -49,6 +49,7 @@ public class DkMsiNmProviderRestService extends AbstractProviderRestService {
     /**
      * Returns the active MSI-NM messages in the requested format and language.
      *
+     * @param refresh whether to force a refresh of the data or not
      * @param format either "json" (default) or "xml"
      * @param lang the requested language, either "da" (default) or "en"
      * @param details whether to include message details or not
@@ -61,6 +62,7 @@ public class DkMsiNmProviderRestService extends AbstractProviderRestService {
     @Path("/messages")
     @GZIP
     public Response getActiveMessages(
+            @QueryParam("refresh") @DefaultValue("false") boolean refresh,
             @QueryParam("format") @DefaultValue("json") String format,
             @QueryParam("lang") @DefaultValue("da") String lang,
             @QueryParam("details") @DefaultValue("true") boolean details,
@@ -70,6 +72,7 @@ public class DkMsiNmProviderRestService extends AbstractProviderRestService {
     ) {
         return super.getActiveMessages(
                 request,
+                refresh,
                 format,
                 lang,
                 details,

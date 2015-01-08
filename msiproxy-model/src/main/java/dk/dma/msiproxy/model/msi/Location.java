@@ -73,6 +73,17 @@ public class Location extends LocalizedEntity<Location.LocationDesc> {
         return points;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LocationDesc createDesc(String lang) {
+        LocationDesc desc = new LocationDesc();
+        desc.setLang(lang);
+        checkCreateDescs().add(desc);
+        return desc;
+    }
+
     @Override
     @XmlElement // Make JAX-B Happy
     public List<LocationDesc> getDescs() { return  super.getDescs(); }

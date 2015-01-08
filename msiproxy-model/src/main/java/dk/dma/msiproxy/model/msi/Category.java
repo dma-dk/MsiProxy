@@ -76,6 +76,17 @@ public class Category extends LocalizedEntity<Category.CategoryDesc> {
         return children;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CategoryDesc createDesc(String lang) {
+        CategoryDesc desc = new CategoryDesc();
+        desc.setLang(lang);
+        checkCreateDescs().add(desc);
+        return desc;
+    }
+
     @XmlAttribute
     public Integer getId() {
         return id;

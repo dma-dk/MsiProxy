@@ -194,6 +194,17 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
         return lightsListNumbers;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MessageDesc createDesc(String lang) {
+        MessageDesc desc = new MessageDesc();
+        desc.setLang(lang);
+        checkCreateDescs().add(desc);
+        return desc;
+    }
+
     // ************ Getters and setters *************
 
     @XmlAttribute
