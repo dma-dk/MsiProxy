@@ -17,14 +17,14 @@ import javax.ws.rs.core.Response;
 /**
  * Provides a REST interface for accessing Danish legacy MSI messages
  */
-@Path("/" + DkProviderService.PROVIDER_ID + "/v1/service")
-public class DkProviderRestService extends AbstractProviderRestService {
+@Path("/" + DkMsiProviderService.PROVIDER_ID + "/v1/service")
+public class DkMsiProviderRestService extends AbstractProviderRestService {
 
     @Inject
     Logger log;
 
     @Inject
-    DkProviderService providerService;
+    DkMsiProviderService providerService;
 
     @Context
     Request request;
