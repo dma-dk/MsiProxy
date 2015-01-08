@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 /**
@@ -98,7 +97,7 @@ public class DkProviderService extends AbstractProviderService {
             }
 
         } catch (Exception e) {
-            log.error("Failed loading messages: " + e.getMessage(), e);
+            log.error("Failed loading messages: " + e.getMessage());
         }
 
         return new AsyncResult<>(messages);
