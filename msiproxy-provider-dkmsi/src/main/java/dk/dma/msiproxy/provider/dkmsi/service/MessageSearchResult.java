@@ -1,4 +1,4 @@
-package dk.dma.msiproxy.dkprovider.service;
+package dk.dma.msiproxy.provider.dkmsi.service;
 
 import dk.dma.msiproxy.model.JsonSerializable;
 import dk.dma.msiproxy.model.msi.Message;

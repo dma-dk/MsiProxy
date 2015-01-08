@@ -9,7 +9,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>msiproxy-provider-dk</artifactId>
+    <artifactId>msiproxy-provider-dkmsi</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

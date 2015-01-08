@@ -1,9 +1,9 @@
-package dk.dma.msiproxy.dkprovider.service;
+package dk.dma.msiproxy.provider.dkmsi.service;
 
 import dk.dma.msiproxy.common.service.AbstractProviderService;
 import dk.dma.msiproxy.common.service.MessageCache;
 import dk.dma.msiproxy.common.util.JsonUtils;
-import dk.dma.msiproxy.dkprovider.conf.DkMsiDB;
+import dk.dma.msiproxy.provider.dkmsi.conf.DkMsiDB;
 import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
 
@@ -31,7 +31,7 @@ import java.util.concurrent.Future;
 @Startup
 public class DkProviderService extends AbstractProviderService {
 
-    public static final String PROVIDER_ID = "dk_msi";
+    public static final String PROVIDER_ID = "dkmsi";
 
     @Inject
     Logger log;

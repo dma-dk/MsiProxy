@@ -1,4 +1,4 @@
-package dk.dma.msiproxy.dkprovider.service;
+package dk.dma.msiproxy.provider.dkmsi.service;
 
 import dk.dma.msiproxy.common.service.AbstractProviderRestService;
 import dk.dma.msiproxy.common.service.AbstractProviderService;

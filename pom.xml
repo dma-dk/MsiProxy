@@ -158,7 +158,7 @@
     <modules>
         <module>msiproxy-model</module>
         <module>msiproxy-common</module>
-        <module>msiproxy-provider-dk</module>
+        <module>msiproxy-provider-dkmsi</module>
         <module>msiproxy-web</module>
     </modules>
 

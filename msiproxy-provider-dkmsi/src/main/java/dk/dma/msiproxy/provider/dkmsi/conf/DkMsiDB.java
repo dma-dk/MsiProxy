@@ -1,4 +1,4 @@
-package dk.dma.msiproxy.dkprovider.conf;
+package dk.dma.msiproxy.provider.dkmsi.conf;
 
 import javax.inject.Qualifier;
 import java.lang.annotation.ElementType;
