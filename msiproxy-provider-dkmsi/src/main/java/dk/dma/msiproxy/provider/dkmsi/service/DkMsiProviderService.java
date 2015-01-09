@@ -6,7 +6,10 @@ import dk.dma.msiproxy.common.service.MessageCache;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.model.msi.Area;
 import dk.dma.msiproxy.model.msi.Category;
+import dk.dma.msiproxy.model.msi.Location;
+import dk.dma.msiproxy.model.msi.LocationType;
 import dk.dma.msiproxy.model.msi.Message;
+import dk.dma.msiproxy.model.msi.Point;
 import dk.dma.msiproxy.model.msi.SeriesIdType;
 import dk.dma.msiproxy.model.msi.SeriesIdentifier;
 import dk.dma.msiproxy.model.msi.Status;
@@ -121,7 +124,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
                 // No changes detected
                 if (!changes) {
-                    log.info("Messages not changed");
+                    log.info("MSI messages not changed");
                     return messages;
                 }
             }
@@ -141,12 +144,23 @@ public class DkMsiProviderService extends AbstractProviderService {
             setActiveMessages(result);
 
         } catch (Exception e) {
-            log.error("Failed loading messages: " + e.getMessage());
+            log.error("Failed loading MSI messages: " + e.getMessage());
         }
 
         return messages;
     }
 
+    /**
+     * Read the SQL result set into a list of messages.
+     *
+     * The result set will contain an ordered list of messages. If a message
+     * is associated with a location containing multiple points, there will
+     * be one row of per point. Otherwise, there will be one row per message.
+     *
+     * @param msiData the SQL result set
+     * @return the list of messages
+     */
+    @SuppressWarnings("unused")
     private List<Message> readMsiData(List<Object[]> msiData) {
 
         List<Message> result = new ArrayList<>();
@@ -222,6 +236,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 message.setType(Type.COASTAL_WARNING);
             }
 
+            // Actually, we know that only published messages are loaded, so, this is mildly redundant:
             Date now = new Date();
             Status status = Status.PUBLISHED;
             if (deleted != null && statusDraft) {
@@ -258,6 +273,64 @@ public class DkMsiProviderService extends AbstractProviderService {
                 area = createAreaTemplate(area2En, area2Da, area);
             }
             message.setArea(area);
+
+            // Categories
+            // NB: The category structure is not very usable and will be changed for MSI-NM
+             Category category = createCategoryTemplate(category1En, category1Da, null);
+             category = createCategoryTemplate(category2En, category2Da, category);
+             if (category != null) {
+                message.checkCreateCategories().add(category);
+             }
+
+            // Locations
+            if (pointLatitude != null) {
+                LocationType type;
+                switch (locationType) {
+                    case "Point":       type = LocationType.POINT; break;
+                    case "Polygon":     type = LocationType.POLYGON; break;
+                    case "Points":      type = LocationType.POLYLINE; break;
+                    case "Polyline":    type = LocationType.POLYLINE; break;
+                    default:            type = LocationType.POLYLINE;
+                }
+                Location loc1 = new Location();
+                loc1.setType(type);
+                if (pointRadius != null) {
+                    loc1.setRadius(pointRadius);
+                }
+                message.checkCreateLocations().add(loc1);
+
+                // Read the points of the location
+                while (true) {
+                    // If the type of the location is POINT, there must only be one point per location
+                    if (loc1.getType() == LocationType.POINT && loc1.checkCreatePoints().size() > 0) {
+                        loc1 = new Location();
+                        loc1.setType(LocationType.POINT);
+                        message.getLocations().add(loc1);
+                    }
+                    Point pt = new Point();
+                    pt.setIndex(pointIndex);
+                    pt.setLat(pointLatitude);
+                    pt.setLon(pointLongitude);
+                    loc1.checkCreatePoints().add(pt);
+
+                    // Keep reading points until a new message appears or we reach last row
+                    if (x == msiData.size() - 1 || !Objects.equals(id, msiData.get(x + 1)[0])) {
+                        break;
+                    }
+                    x++;
+                }
+
+                // Check the location to make it valid
+                if (message.getLocations().size() > 0) {
+                    Location loc = message.getLocations().get(0);
+                    if (loc != null && loc.getType() == LocationType.POLYGON && loc.getPoints().size() < 3) {
+                        loc.setType(LocationType.POLYLINE);
+                    }
+                    if (loc != null && loc.getType() == LocationType.POLYLINE && loc.getPoints().size() < 2) {
+                        loc.setType(LocationType.POINT);
+                    }
+                }
+            }
 
         }
 

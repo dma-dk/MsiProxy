@@ -30,7 +30,7 @@ import java.util.List;
 @XmlType(propOrder = { "descs", "type", "points", "radius" })
 public class Location extends LocalizedEntity<Location.LocationDesc> {
 
-    String type;
+    LocationType type;
     Integer radius;
     List<Point> points;
 
@@ -88,11 +88,11 @@ public class Location extends LocalizedEntity<Location.LocationDesc> {
     @XmlElement // Make JAX-B Happy
     public List<LocationDesc> getDescs() { return  super.getDescs(); }
 
-    public String getType() {
+    public LocationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(LocationType type) {
         this.type = type;
     }
 

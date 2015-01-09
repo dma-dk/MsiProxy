@@ -48,3 +48,7 @@ FROM
   LEFT JOIN point pt                ON loc.id = pt.locationId
 WHERE
   msg.id IN (:ids)
+ORDER BY
+   msg.sortOrder,
+   msg.id,
+   pt.ptnNo
