@@ -26,6 +26,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -124,7 +125,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
                 // No changes detected
                 if (!changes) {
-                    log.info("MSI messages not changed");
+                    log.info("Legacy MSI messages not changed");
                     return messages;
                 }
             }
@@ -141,10 +142,11 @@ public class DkMsiProviderService extends AbstractProviderService {
 
             List<Message> result = readMsiData(msiData);
 
+            log.info(String.format("Loaded %d legacy MSI messages in %d ms", result.size(), System.currentTimeMillis() - t0));
             setActiveMessages(result);
 
         } catch (Exception e) {
-            log.error("Failed loading MSI messages: " + e.getMessage());
+            log.error("Failed loading legacy MSI messages: " + e.getMessage(), e);
         }
 
         return messages;
@@ -185,12 +187,16 @@ public class DkMsiProviderService extends AbstractProviderService {
             Integer version             = getInt(row, col++);
             String  priority            = getString(row, col++);
             String  messageType         = getString(row, col++);
+            Integer category1Id         = getInt(row, col++);
             String  category1En         = getString(row, col++);
             String  category1Da         = getString(row, col++);
+            Integer category2Id         = getInt(row, col++);
             String  category2En         = getString(row, col++);
             String  category2Da         = getString(row, col++);
+            Integer area1Id             = getInt(row, col++);
             String  area1En             = getString(row, col++);
             String  area1Da             = getString(row, col++);
+            Integer area2Id             = getInt(row, col++);
             String  area2En             = getString(row, col++);
             String  area2Da             = getString(row, col++);
             String  area3En             = getString(row, col++);
@@ -267,17 +273,17 @@ public class DkMsiProviderService extends AbstractProviderService {
             }
 
             // Areas
-            Area area = createAreaTemplate(area1En, area1Da, null);
+            Area area = createAreaTemplate(area1Id, area1En, area1Da, null);
             // Annoyingly, legacy data has Danmark as a sub-area of Danmark
             if (!StringUtils.equals(area1En, area2En) || !StringUtils.equals(area1Da, area2Da)) {
-                area = createAreaTemplate(area2En, area2Da, area);
+                area = createAreaTemplate(area2Id, area2En, area2Da, area);
             }
             message.setArea(area);
 
             // Categories
             // NB: The category structure is not very usable and will be changed for MSI-NM
-             Category category = createCategoryTemplate(category1En, category1Da, null);
-             category = createCategoryTemplate(category2En, category2Da, category);
+             Category category = createCategoryTemplate(category1Id, category1En, category1Da, null);
+             category = createCategoryTemplate(category2Id, category2En, category2Da, category);
              if (category != null) {
                 message.checkCreateCategories().add(category);
              }
@@ -340,15 +346,17 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Creates an Area template based on the given Danish and English name
      * and optionally a parent Area
+     * @param id the id of the area
      * @param nameEn English name
      * @param nameDa Danish name
      * @param parent parent area
      * @return the Area template, or null if the names are empty
      */
-    public static Area createAreaTemplate(String nameEn, String nameDa, Area parent) {
+    public static Area createAreaTemplate(Integer id, String nameEn, String nameDa, Area parent) {
         Area area = null;
-        if (StringUtils.isNotBlank(nameEn) || StringUtils.isNotBlank(nameDa)) {
+        if (id != null && (StringUtils.isNotBlank(nameEn) || StringUtils.isNotBlank(nameDa))) {
             area = new Area();
+            area.setId(id);
             if (StringUtils.isNotBlank(nameEn)) {
                 area.createDesc("en").setName(nameEn);
             }
@@ -363,15 +371,17 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Creates an Category template based on the given Danish and English name
      * and optionally a parent Category
+     * @param id the id of the category
      * @param nameEn English name
      * @param nameDa Danish name
      * @param parent parent area
      * @return the Category template, or null if the names are empty
      */
-    public static Category createCategoryTemplate(String nameEn, String nameDa, Category parent) {
+    public static Category createCategoryTemplate(Integer id, String nameEn, String nameDa, Category parent) {
         Category category = null;
-        if (StringUtils.isNotBlank(nameEn) || StringUtils.isNotBlank(nameDa)) {
+        if (id != null && (StringUtils.isNotBlank(nameEn) || StringUtils.isNotBlank(nameDa))) {
             category = new Category();
+            category.setId(id);
             if (StringUtils.isNotBlank(nameEn)) {
                 category.createDesc("en").setName(nameEn);
             }
@@ -388,7 +398,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     private Integer getInt(Object[] row, int index) {
-        return (Integer)row[index];
+        return (row[index] != null && row[index] instanceof BigInteger) ? new Integer(((BigInteger)row[index]).intValue()) : (Integer)row[index];
     }
 
     private Double getDouble(Object[] row, int index) {

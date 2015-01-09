@@ -17,13 +17,17 @@
 
   cls.class                AS messageType,
 
+  cat.id                   AS category1_id,
   cat.english              AS category1_en,
   cat.danish               AS category1_da,
+  subcat.id + 1000         AS category2_id,
   subcat.english           AS category2_en,
   subcat.danish            AS category2_da,
 
+  c.id                     AS area1_id,
   c.country_english        AS area1_en,
   c.country_danish         AS area1_da,
+  a.id + 1000              AS area2_id,
   a.area_english           AS area2_en,
   a.area_danish            AS area2_da,
   loc.subarea              AS area3_en,
