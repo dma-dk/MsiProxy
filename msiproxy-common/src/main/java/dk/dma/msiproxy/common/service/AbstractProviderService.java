@@ -1,6 +1,7 @@
 package dk.dma.msiproxy.common.service;
 
 import dk.dma.msiproxy.model.MessageFilter;
+import dk.dma.msiproxy.model.msi.Category;
 import dk.dma.msiproxy.model.msi.Message;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
@@ -115,5 +116,17 @@ public abstract class AbstractProviderService {
      * @return the resulting list of messages
      */
     public abstract List<Message> loadMessages();
+
+    /**
+     * Returns a default firing exercise category
+     * @return a default firing exercise category
+     */
+    public Category getDefaultFiringExerciseCategory() {
+        Category category = new Category();
+        category.setId(-1000);
+        category.createDesc("en").setName("Firing Exercises");
+        category.createDesc("da").setName("Skydeøvelser");
+        return category;
+    }
 
 }

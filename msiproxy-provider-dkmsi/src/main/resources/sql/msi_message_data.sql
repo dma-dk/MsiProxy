@@ -1,5 +1,4 @@
  SELECT
-  msg.id                   AS id,
   msg.messageId            AS messageId,
   msg.draft                AS statusDraft,
   msg.navtexNo             AS navtexNo,
@@ -32,12 +31,8 @@
   a.area_danish            AS area2_da,
   loc.subarea              AS area3_en,
   loc.subAreaLocalLanguage AS area3_da,
-  loctp.type               AS locationType,
+  loctp.type               AS locationType
 
-  pt.ptnNo                 AS pointIndex,
-  pt.latitude              AS pointLatitude,
-  pt.longitude             AS pointLongitude,
-  pt.radius                AS pointRadius
 FROM
   message msg
   LEFT JOIN priority prio           ON msg.priorityId = prio.id
@@ -49,10 +44,5 @@ FROM
   LEFT JOIN main_area a             ON loc.areaId = a.id
   LEFT JOIN country c               ON a.countryId = c.id
 
-  LEFT JOIN point pt                ON loc.id = pt.locationId
 WHERE
-  msg.id IN (:ids)
-ORDER BY
-   msg.sortOrder,
-   msg.id,
-   pt.ptnNo
+  msg.id = :id
