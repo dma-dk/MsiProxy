@@ -35,7 +35,7 @@ import java.util.Set;
  */
 @XmlRootElement(name = "message")
 @XmlType(propOrder = {"seriesIdentifier", "type", "status", "area", "categories", "charts", "horizontalDatum", "validFrom", "validTo",
-        "locations", "descs", "cancellationDate", "references", "lightsListNumbers", "originalInformation"})
+        "locations", "descs", "cancellationDate", "references", "lightsListNumbers", "originalInformation", "provider"})
 public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     Integer id;
@@ -56,6 +56,7 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
     Set<Reference> references;
     List<String> lightsListNumbers;
     Boolean originalInformation;
+    String provider;
 
     /**
      * Constructor
@@ -78,6 +79,7 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
         type = message.getType();
         validFrom = message.getValidFrom();
         validTo = message.getValidTo();
+        provider = message.getProvider();
 
         if (message.getDescs() != null) {
             message.getDescs(filter).stream()
@@ -357,6 +359,14 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     public void setOriginalInformation(Boolean originalInformation) {
         this.originalInformation = originalInformation;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 
     /**

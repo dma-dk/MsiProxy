@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.msiproxy.common.service;
+package dk.dma.msiproxy.common.provider;
 
 import dk.dma.msiproxy.model.msi.Message;
 import org.infinispan.Cache;

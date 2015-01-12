@@ -1,7 +1,7 @@
 package dk.dma.msiproxy.provider.dkmsi.service;
 
-import dk.dma.msiproxy.common.service.AbstractProviderRestService;
-import dk.dma.msiproxy.common.service.AbstractProviderService;
+import dk.dma.msiproxy.common.provider.AbstractProviderRestService;
+import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import org.jboss.resteasy.annotations.GZIP;
 import org.slf4j.Logger;
 

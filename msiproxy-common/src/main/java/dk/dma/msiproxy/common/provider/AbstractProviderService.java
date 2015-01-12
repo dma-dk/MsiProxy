@@ -1,5 +1,6 @@
-package dk.dma.msiproxy.common.service;
+package dk.dma.msiproxy.common.provider;
 
+import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.model.MessageFilter;
 import dk.dma.msiproxy.model.msi.Category;
 import dk.dma.msiproxy.model.msi.Message;
@@ -7,6 +8,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.infinispan.Cache;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
  * An abstract base class for MSI providers.
  */
 public abstract class AbstractProviderService {
+
+    public static String MESSAGE_REPO_ROOT_FOLDER = "messages";
 
     protected List<Message> messages = new CopyOnWriteArrayList<>();
     protected long fetchTime = -1L;
@@ -30,6 +35,12 @@ public abstract class AbstractProviderService {
      * @return a reference to the message cache service
      */
     public abstract MessageCache getMessageCache();
+
+    /**
+     * Returns a reference to the repository service
+     * @return a reference to the repository service
+     */
+    public abstract RepositoryService getRepositoryService();
 
     /**
      * Returns a reference to the cache
@@ -49,12 +60,28 @@ public abstract class AbstractProviderService {
     }
 
     /**
+     * Returns the message with the given ID
+     * @param messageId the message ID
+     * @return the message, or null if not found
+     */
+    public Message getMessage(Integer messageId) {
+        return getActiveMessages().stream()
+                .filter(msg -> msg.getId().equals(messageId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Updates the full list of active MSI messages
      * @param messages the new full list of active MSI messages
      */
     protected synchronized void setActiveMessages(List<Message> messages) {
         this.messages = new CopyOnWriteArrayList<>(messages);
         this.fetchTime = System.currentTimeMillis();
+
+        // Enforce the provider attribute of the messages
+        this.messages.forEach(msg -> msg.setProvider(getProviderId()));
+
         getCache().clear();
     }
 
@@ -127,6 +154,59 @@ public abstract class AbstractProviderService {
         category.createDesc("en").setName("Firing Exercises");
         category.createDesc("da").setName("Skydeøvelser");
         return category;
+    }
+
+    /***************************************/
+    /** Repo methods                      **/
+    /***************************************/
+
+    /**
+     * Returns the repository folder for the given message
+     * @param id the id of the message
+     * @return the associated repository folder
+     */
+    public Path getMessageRepoFolder(Integer id) throws IOException {
+        String repoFolder = MESSAGE_REPO_ROOT_FOLDER + "/" + getProviderId();
+        return  getRepositoryService().getHashedSubfolder(repoFolder, String.valueOf(id), true);
+    }
+
+    /**
+     * Returns the repository folder for the given message
+     * @param message the message
+     * @return the associated repository folder
+     */
+    public Path getMessageRepoFolder(Message message) throws IOException {
+        return  getMessageRepoFolder(message.getId());
+    }
+
+    /**
+     * Returns the repository file for the given message file
+     * @param message the message
+     * @param name the file name
+     * @return the associated repository file
+     */
+    public Path getMessageFileRepoPath(Message message, String name) throws IOException {
+        return  getMessageRepoFolder(message).resolve(name);
+    }
+
+    /**
+     * Returns the repository URI for the message folder
+     * @param message the message
+     * @return the associated repository URI
+     */
+    public String getMessageFolderRepoPath(Message message) throws IOException {
+        return getRepositoryService().getRepoPath(getMessageRepoFolder(message));
+    }
+
+    /**
+     * Returns the repository URI for the given message file
+     * @param message the message
+     * @param name the file name
+     * @return the associated repository URI
+     */
+    public String getMessageFileRepoUri(Message message, String name) throws IOException {
+        Path file = getMessageRepoFolder(message).resolve(name);
+        return getRepositoryService().getRepoUri(file);
     }
 
 }

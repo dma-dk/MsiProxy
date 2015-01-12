@@ -42,6 +42,17 @@ public class Point extends LocalizedEntity<Point.PointDesc> {
 
     /**
      * Constructor
+     * @param lat the latitude
+     * @param lon the longitude
+     */
+    public Point(double lat, double lon) {
+        this.lat = lat;
+        this.lon = lon;
+    }
+
+
+    /**
+     * Constructor
      * @param point the point
      * @param filter what type of data to include from the entity
      */

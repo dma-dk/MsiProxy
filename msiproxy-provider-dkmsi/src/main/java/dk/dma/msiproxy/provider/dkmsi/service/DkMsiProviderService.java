@@ -1,8 +1,10 @@
 package dk.dma.msiproxy.provider.dkmsi.service;
 
 import dk.dma.msiproxy.common.conf.TextResource;
-import dk.dma.msiproxy.common.service.AbstractProviderService;
-import dk.dma.msiproxy.common.service.MessageCache;
+import dk.dma.msiproxy.common.provider.AbstractProviderService;
+import dk.dma.msiproxy.common.provider.MessageCache;
+import dk.dma.msiproxy.common.provider.Providers;
+import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.common.util.TimeUtils;
 import dk.dma.msiproxy.model.msi.Area;
@@ -71,7 +73,13 @@ public class DkMsiProviderService extends AbstractProviderService {
     Logger log;
 
     @Inject
+    Providers providers;
+
+    @Inject
     MessageCache messageCache;
+
+    @Inject
+    RepositoryService repositoryService;
 
     @Inject
     @DkMsiDB
@@ -114,10 +122,21 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RepositoryService getRepositoryService() {
+        return repositoryService;
+    }
+
+    /**
      * Called at start up.
      */
     @PostConstruct
     public void init() {
+        // Register with the providers service
+        providers.registerProvider(this);
+
         // Load messages
         loadMessages();
     }

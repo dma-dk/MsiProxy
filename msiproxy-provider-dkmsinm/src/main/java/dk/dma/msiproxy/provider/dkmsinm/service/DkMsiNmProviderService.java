@@ -1,7 +1,9 @@
 package dk.dma.msiproxy.provider.dkmsinm.service;
 
-import dk.dma.msiproxy.common.service.AbstractProviderService;
-import dk.dma.msiproxy.common.service.MessageCache;
+import dk.dma.msiproxy.common.provider.AbstractProviderService;
+import dk.dma.msiproxy.common.provider.MessageCache;
+import dk.dma.msiproxy.common.provider.Providers;
+import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.util.JsonUtils;
 import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
@@ -32,7 +34,13 @@ public class DkMsiNmProviderService extends AbstractProviderService {
     Logger log;
 
     @Inject
+    Providers providers;
+
+    @Inject
     MessageCache messageCache;
+
+    @Inject
+    RepositoryService repositoryService;
 
     /**
      * {@inheritDoc}
@@ -51,10 +59,21 @@ public class DkMsiNmProviderService extends AbstractProviderService {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RepositoryService getRepositoryService() {
+        return repositoryService;
+    }
+
+    /**
      * Called at start up.
      */
     @PostConstruct
     public void init() {
+        // Register with the providers service
+        providers.registerProvider(this);
+
         // Load messages
         loadMessages();
     }

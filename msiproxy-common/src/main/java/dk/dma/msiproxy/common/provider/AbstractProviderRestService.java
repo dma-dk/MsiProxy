@@ -1,18 +1,10 @@
-package dk.dma.msiproxy.common.service;
+package dk.dma.msiproxy.common.provider;
 
 import dk.dma.msiproxy.model.MessageFilter;
 import dk.dma.msiproxy.model.msi.Message;
-import org.jboss.resteasy.annotations.GZIP;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Request;
