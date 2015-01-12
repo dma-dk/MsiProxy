@@ -33,6 +33,9 @@
     <div class="row">
         <div class="col-sm-1 msi-details-item-field">Time</div>
         <div ng-if="msg.descs[0].time" class="col-sm-11 msi-details-item-value" ng-bind-html="msg.descs[0].time | plain2html"></div>
+        <div ng-if="!msg.descs[0].time" class="col-sm-11 msi-details-item-value">
+            <msi-valid-from-to msg="msg"/>
+        </div>
     </div>
 
     <!-- Location line -->
