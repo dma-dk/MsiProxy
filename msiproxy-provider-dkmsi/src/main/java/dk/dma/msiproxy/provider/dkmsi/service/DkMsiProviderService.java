@@ -65,6 +65,8 @@ import java.util.stream.Collectors;
 public class DkMsiProviderService extends AbstractProviderService {
 
     public static final String PROVIDER_ID = "dkmsi";
+    public static final int PRIORITY = 200;
+    public static final String[] LANGUAGES = { "da", "en" };
 
     Pattern CHART_PATTERN_1 = Pattern.compile("(\\d+)");
     Pattern CHART_PATTERN_2 = Pattern.compile("(\\d+) \\(INT (\\d+)\\)");
@@ -127,6 +129,22 @@ public class DkMsiProviderService extends AbstractProviderService {
     @Override
     public RepositoryService getRepositoryService() {
         return repositoryService;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getPriority() {
+        return PRIORITY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] getLanguages() {
+        return LANGUAGES;
     }
 
     /**

@@ -12,6 +12,7 @@ import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class Providers {
     /**
      * Contains the list of registered providers mapped by the provider id
      */
-    Map<String, Class<? extends AbstractProviderService>> providers = new HashMap<>();
+    Map<String, ProviderContext> providers = new HashMap<>();
 
     /**
      * Should be called from the @PostConstruct method of a provider service
@@ -41,7 +42,8 @@ public class Providers {
      */
     public void registerProvider(AbstractProviderService providerService) {
         Objects.requireNonNull(providerService);
-        providers.put(providerService.getProviderId(), providerService.getClass());
+        providers.put(providerService.getProviderId(),
+                new ProviderContext(providerService.getPriority(), providerService.getClass()));
         log.info("Registered MSI provider " + providerService.getProviderId());
     }
 
@@ -93,11 +95,11 @@ public class Providers {
     }
 
     /**
-     * Returns the provider service bean for the given provider ID or null if not found
+     * Returns the provider service bean for the given provider ID or null if not found.
      * @param providerId the provider ID
      * @return the instantiated provider service or null
      */
-    public AbstractProviderService getProvider(String providerId) throws NamingException {
+    public AbstractProviderService getProvider(String providerId) {
         try {
             return instantiateProvider(providerId);
         } catch (NamingException e) {
@@ -107,13 +109,44 @@ public class Providers {
     }
 
     /**
-     * Instantiates the provider service bean for the given provider ID
+     * Instantiates the provider service bean for the given provider ID.
+     * If null is specified as the provider ID, the provider with the highest priority is used
      * @param providerId the provider ID
      * @return the instantiated provider service
      */
     private AbstractProviderService instantiateProvider(String providerId) throws NamingException {
-        return CdiHelper.getBean(providers.get(providerId));
+        Class<? extends AbstractProviderService> clazz;
+        if (providerId == null) {
+            clazz = providers.entrySet().stream()
+                    .map(Map.Entry::getValue)
+                    .max(Comparator.comparingInt(ProviderContext::getPriority))
+                    .get()
+                    .getProviderClass();
+        } else {
+            clazz = providers.get(providerId).getProviderClass();
+        }
+        return CdiHelper.getBean(clazz);
     }
 
+    /**
+     * Used for associating a provider class with the priority of the provider
+     */
+    public static class ProviderContext {
+        int priority;
+        Class<? extends AbstractProviderService> providerClass;
 
+        public ProviderContext(int priority, Class<? extends AbstractProviderService> providerClass) {
+            this.priority = priority;
+            this.providerClass = providerClass;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public Class<? extends AbstractProviderService> getProviderClass() {
+            return providerClass;
+        }
+    }
 }
+

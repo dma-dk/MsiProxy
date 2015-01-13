@@ -10,6 +10,7 @@ import org.infinispan.Cache;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -29,6 +30,32 @@ public abstract class AbstractProviderService {
      * @return a unique id for the implementing provider service
      */
     public abstract String getProviderId();
+
+    /**
+     * Returns a priority for this provider
+     * @return a priority for this provider
+     */
+    public abstract int getPriority();
+
+    /**
+     * Returns the list of supported languages codes for this provider.
+     * The languages should be returned in a prioritized order
+     * @return the list of supported languages codes for this provider
+     */
+    public abstract String[] getLanguages();
+
+    /**
+     * Returns the language if it is supported by this provider.
+     * Otherwise, returns the default language.
+     * @param lang the language to test
+     * @return a supported language
+     */
+    public String getLanguage(String lang) {
+        return Arrays.asList(getLanguages()).stream()
+                .filter(l -> l.equalsIgnoreCase(lang))
+                .findFirst()
+                .orElse(getLanguages()[0]);
+    }
 
     /**
      * Returns a reference to the message cache service

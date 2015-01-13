@@ -2,6 +2,7 @@ package dk.dma.msiproxy.web;
 
 import com.itextpdf.text.DocumentException;
 import dk.dma.msiproxy.common.MsiProxyApp;
+import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.Providers;
 import dk.dma.msiproxy.common.util.WebUtils;
 import dk.dma.msiproxy.model.MessageFilter;
@@ -59,30 +60,30 @@ public class MessageDetailsServlet extends HttpServlet {
         // Never cache the response
         response = WebUtils.nocache(response);
 
-        // Read the mandatory parameters
+        // Read the provider and language parameters
         String providerId = request.getParameter("provider");
         String lang = request.getParameter("lang");
-        if (StringUtils.isBlank(providerId) || StringUtils.isBlank(lang)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Request must specify 'lang' and 'provider' parameters");
+
+        AbstractProviderService providerService = providers.getProvider(providerId);
+        if (providerService == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid 'provider' parameter");
             return;
         }
+
+        // Ensure that the language is supported
+        lang = providerService.getLanguage(lang);
+        final Locale locale = new Locale(lang);
 
         // Force the encoding and the locale based on the lang parameter
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-        final Locale locale = new Locale(lang);
         request = new HttpServletRequestWrapper(request) {
             @Override public Locale getLocale() { return locale; }
         };
 
         // Get the messages in the given language for the requested provider
         MessageFilter filter = new MessageFilter().lang(lang);
-        List<Message> messages = providers.getCachedMessages(providerId, filter);
-
-        if  (messages == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid 'provider' parameters: " + providerId);
-            return;
-        }
+        List<Message> messages = providerService.getCachedMessages(filter);
 
         // Register the attributes to be used on the JSP apeg
         request.setAttribute("messages", messages);

@@ -29,6 +29,8 @@ import java.util.List;
 public class DkMsiNmProviderService extends AbstractProviderService {
 
     public static final String PROVIDER_ID = "dkmsinm";
+    public static final int PRIORITY = 100;
+    public static final String[] LANGUAGES = { "da", "en" };
 
     @Inject
     Logger log;
@@ -64,6 +66,22 @@ public class DkMsiNmProviderService extends AbstractProviderService {
     @Override
     public RepositoryService getRepositoryService() {
         return repositoryService;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getPriority() {
+        return PRIORITY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] getLanguages() {
+        return LANGUAGES;
     }
 
     /**
