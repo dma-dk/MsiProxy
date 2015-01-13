@@ -392,8 +392,8 @@ public class DkMsiProviderService extends AbstractProviderService {
         message.checkCreateLocations().add(location);
         switch (locationType) {
             case "Point": location.setType(LocationType.POINT); break;
+            case "Points": location.setType(LocationType.POINT); break;
             case "Polygon": location.setType(LocationType.POLYGON); break;
-            case "Points": location.setType(LocationType.POLYLINE); break;
             case "Polyline": location.setType(LocationType.POLYLINE); break;
             default: location.setType(LocationType.POLYLINE);
         }
