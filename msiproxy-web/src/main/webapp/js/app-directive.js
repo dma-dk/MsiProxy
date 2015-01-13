@@ -35,13 +35,16 @@ angular.module('msiproxy.app')
             },
             link: function(scope, element, attrs) {
                 var msg = scope.msiMessageId;
-                var id = msg.seriesIdentifier.fullId;
-                if (msg.type == 'TEMPORARY_NOTICE') {
-                    id += '(T)';
-                } else if (msg.type == 'PRELIMINARY_NOTICE') {
-                    id += '(P)';
+                if (msg.seriesIdentifier.number) {
+                    var id = msg.seriesIdentifier.fullId;
+                    if (msg.type == 'TEMPORARY_NOTICE') {
+                        id += '(T)';
+                    } else if (msg.type == 'PRELIMINARY_NOTICE') {
+                        id += '(P)';
+                    }
+                    id += '.';
+                    element.html(id);
                 }
-                element.html(id);
             }
         };
     }])
