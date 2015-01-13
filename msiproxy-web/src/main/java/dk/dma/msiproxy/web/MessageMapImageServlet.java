@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.msiproxy.web.rest;
+package dk.dma.msiproxy.web;
 
 import dk.dma.msiproxy.common.MsiProxyApp;
 import dk.dma.msiproxy.common.provider.AbstractProviderService;

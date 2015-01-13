@@ -1,7 +1,6 @@
 
 /**
  * Translations.
- * Specific site implementations should add their own translations
  */
 angular.module('msiproxy.app')
 
@@ -21,7 +20,7 @@ angular.module('msiproxy.app')
             'REF_CANCELLED' : '(cancelled)',
             'REF_UPDATED' : '(updated)'
 
-    });
+        });
 
         $translateProvider.translations('da', {
 
@@ -37,7 +36,7 @@ angular.module('msiproxy.app')
             'REF_CANCELLED' : '(udgår)',
             'REF_UPDATED' : '(ajourført)'
 
-    });
+        });
 
         $translateProvider.preferredLanguage('en');
 

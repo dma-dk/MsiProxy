@@ -1,6 +1,7 @@
 package dk.dma.msiproxy.common.provider;
 
 import dk.dma.msiproxy.common.util.CdiHelper;
+import dk.dma.msiproxy.model.MessageFilter;
 import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
 
@@ -9,14 +10,17 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.NamingException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /**
  * A service that maintains a list of all registered MSI providers
  */
+@Named("providers")
 @Singleton
 @Startup
 @Lock(LockType.READ)
@@ -51,6 +55,37 @@ public class Providers {
     public Message getMessage(String providerId, Integer messageId) {
         try {
             return instantiateProvider(providerId).getMessage(messageId);
+        } catch (NamingException e) {
+            log.warn("Error instantiating provider " + providerId);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of active messages from the given provider
+     *
+     * @param providerId the provider ID
+     * @return the messages, or null if not found
+     */
+    public List<Message> getActiveMessages(String providerId) {
+        try {
+            return instantiateProvider(providerId).getActiveMessages();
+        } catch (NamingException e) {
+            log.warn("Error instantiating provider " + providerId);
+        }
+        return null;
+    }
+
+    /**
+     * Returns a filtered view of the message list from the given provider
+     *
+     * @param providerId the provider ID
+     * @param filter the data filter
+     * @return the messages
+     */
+    public List<Message> getCachedMessages(String providerId, MessageFilter filter) {
+        try {
+            return instantiateProvider(providerId).getCachedMessages(filter);
         } catch (NamingException e) {
             log.warn("Error instantiating provider " + providerId);
         }
