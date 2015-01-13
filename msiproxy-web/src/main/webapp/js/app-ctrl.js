@@ -2,18 +2,23 @@
  * The MSI-Proxy controller
  */
 angular.module('msiproxy.app')
-    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', 'MsiProxyService', 'LangService',
-        function ($scope, $rootScope, $routeParams, MsiProxyService, LangService) {
+    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', 'MsiProxyService', 'LangService',
+        function ($scope, $rootScope, $routeParams, $location, $window, MsiProxyService, LangService) {
             'use strict';
 
             $scope.messages = [];
             $scope.provider = $routeParams.provider;
             $scope.lang = $routeParams.lang;
+            $scope.viewMode = 'details';
 
-            $scope.init = function () {
+            // Called to initialize the controller
+            $scope.init = function (viewMode) {
+                $scope.viewMode = viewMode;
 
+                // Register the current language
                 LangService.changeLanguage($scope.lang);
 
+                // Load messages
                 MsiProxyService.messages(
                     $scope.provider,
                     $scope.lang,
@@ -46,6 +51,16 @@ angular.module('msiproxy.app')
                         }
                     }
                 }
+            };
+
+            // Change the view mode of the message list
+            $scope.go = function(viewMode) {
+                $location.path( '/' + $scope.provider + '/' + $scope.lang + '/' + viewMode );
+            };
+
+            // Export a PDF of the message list
+            $scope.pdf = function () {
+                $window.location = '/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang;
             };
 
         }]);

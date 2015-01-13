@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A service that maintains a list of all registered MSI providers
@@ -33,7 +34,7 @@ public class Providers {
     /**
      * Contains the list of registered providers mapped by the provider id
      */
-    Map<String, ProviderContext> providers = new HashMap<>();
+    Map<String, ProviderContext> providers = new ConcurrentHashMap<>();
 
     /**
      * Should be called from the @PostConstruct method of a provider service

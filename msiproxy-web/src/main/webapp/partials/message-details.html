@@ -1,5 +1,8 @@
 
-<div ng-controller="MsiProxyCtrl" ng-init="init()">
+<div ng-controller="MsiProxyCtrl" ng-init="init('details')">
+
+    <!-- View mode menu bar -->
+    <div ng-include="'partials/view-modes.html'"></div>
 
     <table class='table table-condensed'>
         <tr ng-repeat-start="msg in messages"  ng-if="msg.areaHeading">
