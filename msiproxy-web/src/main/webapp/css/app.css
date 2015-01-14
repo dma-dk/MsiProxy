@@ -95,6 +95,66 @@ h3 {
     padding-left: 0;
 }
 
+
+.msi-grid-item-container {
+    margin-bottom: 20px;
+    width: 280px;
+    height: 260px;
+    position: relative;
+}
+
+.msi-grid-item {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    border: 2px solid #fff;
+    position: relative;
+    margin: 1px;
+    width: 260px;
+    height: 260px;
+    cursor: pointer;
+}
+
+.msi-grid-item:hover {
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.msi-grid-item-image {
+    top: 0;
+    left: 0;
+}
+
+.msi-grid-item-header {
+    background-color: rgba(247, 247, 247, 0.8);
+    font-size: 11px;
+    line-height: 12px;
+    position: absolute;
+    top: 0;
+    padding: 5px 8px 5px 5px;
+}
+
+.msi-grid-item-title {
+    max-height: 50px;
+    overflow: hidden;
+}
+
+.msi-grid-item-details {
+    background-color: rgba(121, 171, 181, 0.8);
+    color: rgb(30, 30, 30);
+    display: block;
+    font-size: 12px;
+    height: 50px;
+    line-height: 15px;
+    opacity: 1;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 5px 8px 5px 8px;
+}
+
+
 .visible-on-map {
     z-index: 200;
     display: block;
