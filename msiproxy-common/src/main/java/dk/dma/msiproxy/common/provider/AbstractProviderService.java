@@ -194,45 +194,36 @@ public abstract class AbstractProviderService {
      */
     public Path getMessageRepoFolder(Integer id) throws IOException {
         String repoFolder = MESSAGE_REPO_ROOT_FOLDER + "/" + getProviderId();
-        return  getRepositoryService().getHashedSubfolder(repoFolder, String.valueOf(id), true);
-    }
-
-    /**
-     * Returns the repository folder for the given message
-     * @param message the message
-     * @return the associated repository folder
-     */
-    public Path getMessageRepoFolder(Message message) throws IOException {
-        return  getMessageRepoFolder(message.getId());
+        return  getRepositoryService().getHashedSubfolder(repoFolder, String.valueOf(id), true, false);
     }
 
     /**
      * Returns the repository file for the given message file
-     * @param message the message
+     * @param id the id of the message
      * @param name the file name
      * @return the associated repository file
      */
-    public Path getMessageFileRepoPath(Message message, String name) throws IOException {
-        return  getMessageRepoFolder(message).resolve(name);
+    public Path getMessageFileRepoPath(Integer id, String name) throws IOException {
+        return  getMessageRepoFolder(id).resolve(name);
     }
 
     /**
      * Returns the repository URI for the message folder
-     * @param message the message
+     * @param id the id of the message
      * @return the associated repository URI
      */
-    public String getMessageFolderRepoPath(Message message) throws IOException {
-        return getRepositoryService().getRepoPath(getMessageRepoFolder(message));
+    public String getMessageFolderRepoPath(Integer id) throws IOException {
+        return getRepositoryService().getRepoPath(getMessageRepoFolder(id));
     }
 
     /**
      * Returns the repository URI for the given message file
-     * @param message the message
+     * @param id the id of the message
      * @param name the file name
      * @return the associated repository URI
      */
-    public String getMessageFileRepoUri(Message message, String name) throws IOException {
-        Path file = getMessageRepoFolder(message).resolve(name);
+    public String getMessageFileRepoUri(Integer id, String name) throws IOException {
+        Path file = getMessageRepoFolder(id).resolve(name);
         return getRepositoryService().getRepoUri(file);
     }
 

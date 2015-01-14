@@ -202,6 +202,11 @@ public class MapImageProducer {
 
             g2.dispose();
 
+            // Create the parent folder if it does not exist
+            if (!Files.exists(imageRepoPath.getParent())) {
+                Files.createDirectories(imageRepoPath.getParent());
+            }
+
             // Save the image to the repository
             ImageIO.write(image, "png", imageRepoPath.toFile());
             image.flush();

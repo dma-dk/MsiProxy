@@ -86,36 +86,48 @@ public class MessageMapImageServlet extends HttpServlet {
                 throw new IllegalArgumentException("Invalid MSI provider: " + providerId);
             }
 
+            // Construct the image file name for the message
+            String imageName = String.format("map_%d.png", mapImageProducer.getMapImageSize());
+
+            // Compute the path and URI for the image file
+            Path messageRepoFolder = providerService.getMessageRepoFolder(id);
+            Path imageRepoPath = messageRepoFolder.resolve(imageName);
+            String uri = providerService.getMessageFileRepoUri(id, imageName);
+            boolean imageFileExists = Files.exists(imageRepoPath);
+
             // Look up the message
             Message message = providerService.getMessage(id);
+
+            // Handle the case where the message does not exist
             if (message == null) {
+                // This may be because the message is not active anymore. Check if the image still exists
+                if (imageFileExists) {
+                    response.sendRedirect(uri);
+                    return;
+                }
+                // No joy. Report an error
                 throw new IllegalArgumentException("Message " + id + " does not exist");
             }
 
+            // If the modification date of the message matches the image file - use it
+            if (imageFileExists && message.getUpdated().getTime() <= Files.getLastModifiedTime(imageRepoPath).toMillis()) {
+                response.sendRedirect(uri);
+                return;
+            }
+
+            // We need to construct hte image from the message locations
             List<Location> locations = getMessageLocations(message);
             if (locations.size() > 0) {
-                // Construct the image file name for the messsage
-                String imageName = String.format("map_%d.png", mapImageProducer.getMapImageSize());
 
-                // Create a hashed sub-folder for the image file
-                Path imageRepoPath = providerService.getMessageFileRepoPath(message, imageName);
-
-                // If the image file does not exist or if the message has been updated after the image file
-                // generate a new image file
-                boolean imageFileExists = Files.exists(imageRepoPath);
-                if (!imageFileExists ||
-                        message.getUpdated().getTime() > Files.getLastModifiedTime(imageRepoPath).toMillis()) {
-                    imageFileExists = mapImageProducer.createMapImage(
-                            locations,
-                            imageRepoPath,
-                            getMessageImage(message),
-                            message.getUpdated());
-                }
+                imageFileExists = mapImageProducer.createMapImage(
+                        locations,
+                        imageRepoPath,
+                        getMessageImage(message),
+                        message.getUpdated());
 
                 // Either return the image file, or a place holder image
                 if (imageFileExists) {
                     // Redirect the the repository streaming service
-                    String uri = providerService.getMessageFileRepoUri(message, imageName);
                     response.sendRedirect(uri);
                     return;
                 }

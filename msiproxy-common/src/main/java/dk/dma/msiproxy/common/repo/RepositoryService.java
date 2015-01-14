@@ -149,14 +149,14 @@ public class RepositoryService {
     /**
      * Creates two levels of sub-folders within the {@code rootFolder} based on
      * a MD5 hash of the {@code target}.
-     * If the sub-folder does not exist, it is created.
      *
      * @param rootFolder the root folder within the repository root
      * @param target the target name used for the hash
      * @param includeTarget whether to create a sub-folder for the target or not
+     * @param createFolders whether or not to create the folders
      * @return the sub-folder associated with the target
      */
-    public Path getHashedSubfolder(String rootFolder, String target, boolean includeTarget) throws IOException {
+    public Path getHashedSubfolder(String rootFolder, String target, boolean includeTarget, boolean createFolders) throws IOException {
         byte[] bytes = target.getBytes("utf-8");
 
         // MD5 hash the ID
@@ -191,7 +191,7 @@ public class RepositoryService {
         }
 
         // Create the folder if it does not exist
-        if (!Files.exists(folder)) {
+        if (createFolders && !Files.exists(folder)) {
             Files.createDirectories(folder);
         }
         return folder;
