@@ -60,7 +60,7 @@ angular.module('msiproxy.app')
 
             // Export a PDF of the message list
             $scope.pdf = function () {
-                $window.location = '/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang;
+                $window.open('/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang, '_blank');
             };
 
         }]);
