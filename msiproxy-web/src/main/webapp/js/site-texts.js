@@ -8,6 +8,7 @@ angular.module('msiproxy.app')
 
         $translateProvider.translations('en', {
 
+            'TITLE' : 'Maritime Notifications',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Time',
             'FIELD_LOCATION' : 'Location',
@@ -24,6 +25,7 @@ angular.module('msiproxy.app')
 
         $translateProvider.translations('da', {
 
+            'TITLE' : 'Maritime Notifikationer',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Tid',
             'FIELD_LOCATION' : 'Placering',
