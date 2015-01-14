@@ -24,14 +24,13 @@ angular.module('msiproxy.app')
     /********************************
      * The language service is used for changing language, etc.
      ********************************/
-    .service('LangService', ['$rootScope', '$window', '$translate',
-        function ($rootScope, $window, $translate) {
+    .service('LangService', ['$rootScope', '$translate',
+        function ($rootScope, $translate) {
             'use strict';
 
             this.changeLanguage = function(lang) {
                 $translate.use(lang);
                 $rootScope.language = lang;
-                $window.localStorage.lang = lang;
             };
 
             // look for a description entity with the given language
