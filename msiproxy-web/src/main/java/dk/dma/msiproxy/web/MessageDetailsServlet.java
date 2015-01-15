@@ -29,6 +29,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Servlet used for generating either a HTML details page
@@ -63,6 +64,7 @@ public class MessageDetailsServlet extends HttpServlet {
         // Read the provider and language parameters
         String providerId = request.getParameter("provider");
         String lang = request.getParameter("lang");
+        String messageId = request.getParameter("messageId");
 
         AbstractProviderService providerService = providers.getProvider(providerId);
         if (providerService == null) {
@@ -84,6 +86,14 @@ public class MessageDetailsServlet extends HttpServlet {
         // Get the messages in the given language for the requested provider
         MessageFilter filter = new MessageFilter().lang(lang);
         List<Message> messages = providerService.getCachedMessages(filter);
+
+        // If a specific message is requested, filter on this
+        if (StringUtils.isNumeric(messageId)) {
+            Integer id = Integer.valueOf(messageId);
+            messages = messages.stream()
+                    .filter(msg -> id.equals(msg.getId()))
+                    .collect(Collectors.toList());
+        }
 
         // Register the attributes to be used on the JSP apeg
         request.setAttribute("messages", messages);

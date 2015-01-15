@@ -110,4 +110,13 @@ angular.module('msiproxy.app')
                     $scope.msg= $scope.messages[$scope.index];
                 }
             };
+
+            // Export a PDF of the message list
+            $scope.pdf = function () {
+                $window.open('/details.pdf?provider=' + $scope.msg.provider
+                    + '&lang=' + $scope.language
+                    + '&messageId=' + $scope.msg.id,
+                    '_blank');
+            };
+
         }]);
