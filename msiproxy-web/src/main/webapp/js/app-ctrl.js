@@ -2,8 +2,8 @@
  * The MSI-Proxy controller
  */
 angular.module('msiproxy.app')
-    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', 'MsiProxyService', 'LangService',
-        function ($scope, $rootScope, $routeParams, $location, $window, MsiProxyService, LangService) {
+    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', '$modal', 'MsiProxyService', 'LangService',
+        function ($scope, $rootScope, $routeParams, $location, $window, $modal, MsiProxyService, LangService) {
             'use strict';
 
             $scope.messages = [];
@@ -63,4 +63,51 @@ angular.module('msiproxy.app')
                 $window.open('/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang, '_blank');
             };
 
+            // Register for 'messageDetails' events, and launch the message details dialog
+            $scope.$on('messageDetails', function (event, data) {
+                $modal.open({
+                    controller: "MessageDialogCtrl",
+                    templateUrl: "/partials/message-details-dialog.html",
+                    size: 'lg',
+                    resolve: {
+                        message: function () {
+                            return data.message;
+                        },
+                        messages: function () {
+                            return data.messages;
+                        }
+                    }
+                });
+            });
+
+        }])
+
+
+    /*******************************************************************
+     * Controller that handles displaying message details in a dialog
+     *******************************************************************/
+    .controller('MessageDialogCtrl', ['$scope', '$window', 'message', 'messages',
+        function ($scope, $window, message, messages) {
+            'use strict';
+
+            $scope.messages = messages;
+            $scope.msg = message;
+            $scope.index = $.inArray(message, messages);
+
+
+            // Navigate to the previous message in the message list
+            $scope.selectPrev = function() {
+                if ($scope.index > 0) {
+                    $scope.index--;
+                    $scope.msg = $scope.messages[$scope.index];
+                }
+            };
+
+            // Navigate to the next message in the message list
+            $scope.selectNext = function() {
+                if ($scope.index >= 0 && $scope.index < $scope.messages.length - 1) {
+                    $scope.index++;
+                    $scope.msg= $scope.messages[$scope.index];
+                }
+            };
         }]);

@@ -1,12 +1,13 @@
 
-<td class="msi-details-image">
-    <img ng-if="msg.id" ng-src="/message-map-image/{{msg.provider}}/{{msg.id}}.png" width="180" height="180" style="cursor: pointer"/>
+<td class="msi-details-image" ng-if="format == 'list'">
+    <img ng-if="msg.id" ng-src="/message-map-image/{{msg.provider}}/{{msg.id}}.png" width="180" height="180" style="cursor: pointer"
+         msi-message-details message="msg" messages="messages"/>
 </td>
 <td class="msi-details-item">
 
     <!-- Title line -->
     <div ng-if="msg.originalInformation">&#10029;</div>
-    <div style="cursor: pointer">
+    <div>
         <strong msi-message-id="msg"></strong>
         <strong msi-message-title="msg"></strong>
         <span ng-if="msg.descs[0].lang != language" style="color: darkgray;">

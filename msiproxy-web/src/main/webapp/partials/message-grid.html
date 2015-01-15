@@ -12,7 +12,7 @@
             </div>
             <div class="msi-grid-item-container col-xs-1 col-sm-1 col-md-1 col-lg-1"
                  ng-repeat-end >
-                <div class="msi-grid-item">
+                <div class="msi-grid-item" msi-message-details message="msg" messages="messages">
                     <img class="msi-grid-item-image" ng-src="/message-map-image/{{msg.provider}}/{{msg.id}}.png" width="256" height="256" style="cursor: pointer"/>
                     <div class="msi-grid-item-header">
                         <div class="msi-grid-item-title">

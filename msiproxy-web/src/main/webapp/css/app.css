@@ -199,6 +199,28 @@ h3 {
     }
 }
 
+.message-details-map {
+    width: 100%;
+    height: 200px;
+    border: 1px solid lightgray;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+@media (min-width: 800px) {
+    .message-details-map {
+        height: 300px;
+    }
+}
+
+.message-details-close-btn {
+    float: right;
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    z-index: 2000;
+}
+
 .visible-on-map {
     z-index: 200;
     display: block;

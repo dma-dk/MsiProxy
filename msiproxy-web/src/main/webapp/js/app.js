@@ -5,7 +5,7 @@
  */
 
 
-var app = angular.module('msiproxy.app', [ 'ngRoute', 'ngSanitize', 'pascalprecht.translate' ])
+var app = angular.module('msiproxy.app', [ 'ngRoute', 'ngSanitize', 'ui.bootstrap', 'pascalprecht.translate' ])
     .config(['$routeProvider', function ($routeProvider) {
         'use strict';
 

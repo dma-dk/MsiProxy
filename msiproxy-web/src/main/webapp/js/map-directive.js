@@ -3,18 +3,21 @@
  * Converts a div into a search result map
  */
 angular.module('msiproxy.app')
-    .directive('msiMap', ['$rootScope', '$location', 'MapService', 'LangService',
-        function ($rootScope, $location, MapService, LangService) {
+    .directive('msiMap', ['$rootScope', '$location', '$timeout', 'MapService', 'LangService',
+        function ($rootScope, $location, $timeout, MapService, LangService) {
         'use strict';
 
             return {
                 restrict: 'A',
 
                 scope: {
-                    msiMap: '='
+                    messages: '=?',
+                    message: '=?'
                 },
 
                 link: function (scope, element, attrs) {
+
+                    scope.interactive = (scope.messages !== undefined);
 
                     var zoom = 6;
                     var lon  = 11;
@@ -114,14 +117,19 @@ angular.module('msiproxy.app')
 
                     // Show a layer switcher
                     map.addControl(new OpenLayers.Control.LayerSwitcher({
-                        'div' : OpenLayers.Util.getElement('msi-layerswitcher')
+                        'div' : OpenLayers.Util.getElement((scope.interactive) ? 'msi-layerswitcher' : 'msi-details-layerswitcher')
                     }));
 
                     // Add zoom buttons
                     map.addControl(new OpenLayers.Control.Zoom());
 
+                    // Trigger an update of the map size
+                    $timeout(function() {
+                        map.updateSize();
+                    }, 100);
+
                     /*********************************/
-                    /* Hover Tooltip                 */
+                    /* Interactive Functionality     */
                     /*********************************/
 
                     function formatTooltip(feature) {
@@ -134,54 +142,84 @@ angular.module('msiproxy.app')
                         return desc;
                     }
 
-                    var hoverControl = new OpenLayers.Control.SelectFeature(
-                        msiLayer, {
-                            hover: true,
-                            onBeforeSelect: function(feature) {
-                                // add code to create tooltip/popup
-                                var popup = new OpenLayers.Popup.FramedCloud(
-                                    "",
-                                    feature.geometry.getBounds().getCenterLonLat(),
-                                    new OpenLayers.Size(100,100),
-                                    formatTooltip(feature),
-                                    null,
-                                    true,
-                                    null);
+                    function onMsiSelect(feature) {
+                        var message = feature.attributes.msi;
+                        var messages = scope.messages;
 
-                                popup.maxSize = new OpenLayers.Size(200,300);
-                                feature.popup = popup;
-
-                                map.addPopup(popup);
-                                // return false to disable selection and redraw
-                                // or return true for default behaviour
-                                return true;
-                            },
-                            onUnselect: function(feature) {
-                                // remove tooltip
-                                map.removePopup(feature.popup);
-                                feature.popup.destroy();
-                                feature.popup=null;
-                            }
+                        $rootScope.$broadcast('messageDetails', {
+                            message: message,
+                            messages: messages
                         });
+                        hoverControl.unselectAll();
+                    }
 
-                    map.addControl(hoverControl);
-                    hoverControl.activate();
+                    if (scope.interactive) {
+
+                        var hoverControl = new OpenLayers.Control.SelectFeature(
+                            msiLayer, {
+                                hover: true,
+                                onBeforeSelect: function(feature) {
+                                    // add code to create tooltip/popup
+                                    feature.popup = new OpenLayers.Popup.FramedCloud(
+                                        "",
+                                        feature.geometry.getBounds().getCenterLonLat(),
+                                        new OpenLayers.Size(100,100),
+                                        formatTooltip(feature),
+                                        null,
+                                        true,
+                                        null);
+
+                                    feature.popup.maxSize = new OpenLayers.Size(200,300);
+
+                                    map.addPopup(feature.popup);
+                                    return true;
+                                },
+                                onUnselect: function(feature) {
+                                    // remove tooltip
+                                    if (feature.popup) {
+                                        map.removePopup(feature.popup);
+                                        feature.popup.destroy();
+                                        feature.popup=null;
+                                    }
+                                }
+                            });
+
+                        map.addControl(hoverControl);
+                        hoverControl.activate();
+
+                        var msiSelect = new OpenLayers.Handler.Click(
+                            hoverControl, {
+                                click: function (evt) {
+                                    var feature = this.layer.getFeatureFromEvent(evt);
+                                    if (feature) {
+                                        onMsiSelect(feature);
+                                    }
+                                }
+                            }, {
+                                single: true,
+                                double : false
+                            });
+                        msiSelect.activate();
+
+                    }
 
                     /*********************************/
                     /* Update MSI and NtM's          */
                     /*********************************/
 
-                    // Crop the text to at most len characters
-                    function cropTxt(txt, len) {
-                        if (txt && txt.length > len) {
-                            txt = txt.substring(0, len) + "\u2026";
-                        }
-                        return txt;
-                    }
+                    // Check for changes to the message
+                    scope.$watch(
+                        function () { return scope.message; },
+                        function (value) {
+                            if (value) {
+                                scope.messages = [value];
+                            }
+                        },
+                        true);
 
                     // Check for changes to the messages list
                     scope.$watch(
-                        function () { return scope.msiMap; },
+                        function () { return scope.messages; },
                         function (value) { addMessageFeatures(value); },
                         true);
 
@@ -198,10 +236,8 @@ angular.module('msiproxy.app')
                                 for (var j in msg.locations) {
                                     var loc = msg.locations[j];
 
-                                    var title = (msg.descs && msg.descs.length > 0) ? msg.descs[0].title : "N/A";
-
                                     // Flick the "showVertices to true to show icons for each vertex
-                                    var attr = { id : i, description: cropTxt(title, 20), type : "msi", msi : msg, icon: icon, showVertices:false  };
+                                    var attr = { id : i, type : "msi", msi : msg, icon: icon, showVertices:false  };
                                     MapService.createLocationFeature(loc, attr, features);
                                 }
                             }
@@ -211,39 +247,6 @@ angular.module('msiproxy.app')
                             MapService.zoomToExtent(map, msiLayer);
                         }
                     }
-
-                    /*********************************/
-                    /* Pop-ups for the features      */
-                    /*********************************/
-
-/*
-                    var msiSelect = new OpenLayers.Control.SelectFeature(msiLayer);
-                    msiLayer.events.on({
-                        "featureselected": onMsiSelect
-                    });
-                    map.addControl(msiSelect);
-                    msiSelect.activate();
-
-                    function onMsiSelect(event) {
-                        var messageId, messages;
-                        if (event.feature.cluster) {
-                            // Cluster clicked
-                            messages = getClusterMessages(event.feature);
-                            messageId = messages[0].id;
-
-                        } else {
-                            // Actual message clicked
-                            messageId = event.feature.attributes.msi.id;
-                            messages = scope.searchResult.messages;
-                        }
-
-                        $rootScope.$broadcast('messageDetails', {
-                            messageId: messageId,
-                            messages: messages
-                        });
-                        msiSelect.unselectAll();
-                    }
-*/
 
                 }
             }

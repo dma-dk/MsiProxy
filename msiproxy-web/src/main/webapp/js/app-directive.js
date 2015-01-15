@@ -4,6 +4,32 @@
  */
 angular.module('msiproxy.app')
 
+    /****************************************************************
+     * Binds a click event that will open the message details dialog
+     ****************************************************************/
+    .directive('msiMessageDetails', ['$rootScope',
+        function ($rootScope) {
+            'use strict';
+
+            return {
+                restrict: 'A',
+                scope: {
+                    message: "=",
+                    messages: "="
+                },
+                link: function(scope, element, attrs) {
+
+                    element.bind('click', function() {
+                        $rootScope.$broadcast('messageDetails', {
+                            message: scope.message,
+                            messages: scope.messages
+                        });
+                    });
+                }
+            };
+        }])
+
+
     /********************************
      * Renders the message details
      ********************************/
@@ -16,10 +42,12 @@ angular.module('msiproxy.app')
             replace: false,
             scope: {
                 msg: "=",
-                messages: "="
+                messages: "=",
+                format: "@?"
             },
             link: function(scope, element, attrs) {
                 scope.language = $rootScope.language;
+                scope.format = scope.format || 'list';
             }
         };
     }])
