@@ -16,16 +16,14 @@
                     <img class="msi-grid-item-image" ng-src="/message-map-image/{{msg.provider}}/{{msg.id}}.png" width="256" height="256" style="cursor: pointer"/>
                     <div class="msi-grid-item-header">
                         <div class="msi-grid-item-title">
-                            <strong msi-message-area="msg"></strong>
-                            <strong ng-if="msg.descs[0].title"> - {{msg.descs[0].title}}</strong>
+                            <strong msi-message-title="msg"></strong>
                             <span ng-if="msg.descs[0].lang != language" style="color: darkgray;">
                                 ( <img ng-src="/img/flags/{{msg.descs[0].lang}}.png" style="height: 10px; opacity: 0.5;"/> )
                             </span>
                         </div>
                         <div class="msi-grid-item-date">
-                            <small ng-if="msg.descs[0].time" class="msi-details-item-value" ng-bind-html="msg.descs[0].time | plain2html"></small>
-                            <small ng-if="!msg.descs[0].time" class="msi-details-item-value">
-                                <msi-valid-from-to msg="msg"/>
+                            <small class="msi-details-item-value">
+                                <msi-valid-from-to msg="msg"></msi-valid-from-to>
                             </small>
                         </div>
                     </div>

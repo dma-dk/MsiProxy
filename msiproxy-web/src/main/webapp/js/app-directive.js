@@ -51,6 +51,21 @@ angular.module('msiproxy.app')
 
 
     /********************************
+     * Replaces the content of the element with the title line of the message
+     ********************************/
+    .directive('msiMessageTitle', ['LangService', function (LangService) {
+        return {
+            restrict: 'A',
+            scope: {
+                msiMessageTitle: "="
+            },
+            link: function(scope, element, attrs) {
+                element.html(LangService.messageTitleLine(scope.msiMessageTitle));
+            }
+        };
+    }])
+
+    /********************************
      * Replaces the content of the element with the area description of the message
      ********************************/
     .directive('msiMessageArea', ['LangService', function (LangService) {
@@ -60,14 +75,7 @@ angular.module('msiproxy.app')
                 msiMessageArea: "="
             },
             link: function(scope, element, attrs) {
-                var desc = LangService.desc(scope.msiMessageArea);
-                var areas = (desc && desc.vicinity) ? desc.vicinity : '';
-                for (var area = scope.msiMessageArea.area; area; area = area.parent) {
-                    desc = LangService.desc(area);
-                    var areaName = (desc) ? desc.name : '';
-                    areas = areaName + ((areas.length > 0 && areaName.length > 0) ? ' - ' : '') + areas;
-                }
-                element.html(areas);
+                element.html(LangService.messageAreaLineage(scope.msiMessageArea));
             }
         };
     }])
@@ -83,49 +91,22 @@ angular.module('msiproxy.app')
                 areaDivider: "@"
             },
             link: function(scope, element, attrs) {
-                var divider = (attrs.areaDivider) ? attrs.areaDivider : " - ";
-                scope.$watch(
-                    function() { return scope.msiArea; },
-                    function (newValue) {
-                        var areas = '';
-                        for (var area = scope.msiArea; area; area = area.parent) {
-                            desc = LangService.desc(area);
-                            var areaName = (desc) ? desc.name : '';
-                            areas = areaName + ((areas.length > 0 && areaName.length > 0) ? divider : '') + areas;
-                        }
-                        element.html(areas);
-                    });
+                element.html(LangService.areaLineage(scope.msiArea, undefined));
             }
         };
     }])
 
     /********************************
-     * Prints the validFrom - validTo date interval
+     * Prints the message time interval
      ********************************/
-    .directive('msiValidFromTo', ['$rootScope', function ($rootScope) {
+    .directive('msiValidFromTo', ['LangService', function (LangService) {
         return {
             restrict: 'E',
             scope: {
                 msg: "="
             },
             link: function(scope, element, attrs) {
-                var lang = $rootScope.language;
-                var time = '';
-                var from = moment(scope.msg.validFrom);
-                time = from.locale(lang).format("lll");
-                if (scope.msg.validTo) {
-                    var to = moment(scope.msg.validTo);
-                    var fromDate = from.locale(lang).format("ll");
-                    var toDate = to.locale(lang).format("ll");
-                    var toDateTime = to.locale(lang).format("lll");
-                    if (fromDate == toDate) {
-                        // Same dates
-                        time += " - " + toDateTime.replace(toDate, '');
-                    } else {
-                        time += " - " + toDateTime;
-                    }
-                }
-                element.html(time);
+                element.html(LangService.messageTime(scope.msg));
             }
         };
     }]);

@@ -8,7 +8,7 @@
     <div ng-if="msg.originalInformation">&#10029;</div>
     <div style="cursor: pointer">
         <strong msi-message-id="msg"></strong>
-        <strong msi-message-area="msg"></strong><strong ng-if="msg.descs[0].title"> - {{msg.descs[0].title}}</strong>
+        <strong msi-message-title="msg"></strong>
         <span ng-if="msg.descs[0].lang != language" style="color: darkgray;">
             ( <img ng-src="/img/flags/{{msg.descs[0].lang}}.png" style="height: 12px; opacity: 0.5;"/> )
         </span>
@@ -31,9 +31,8 @@
     <!-- Time line -->
     <div class="row">
         <div class="col-sm-1 msi-details-item-field" translate>FIELD_TIME</div>
-        <div ng-if="msg.descs[0].time" class="col-sm-11 msi-details-item-value" ng-bind-html="msg.descs[0].time | plain2html"></div>
-        <div ng-if="!msg.descs[0].time" class="col-sm-11 msi-details-item-value">
-            <msi-valid-from-to msg="msg"/>
+        <div class="col-sm-11 msi-details-item-value">
+            <msi-valid-from-to msg="msg"></msi-valid-from-to>
         </div>
     </div>
 
