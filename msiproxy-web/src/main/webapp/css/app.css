@@ -159,7 +159,7 @@ h3 {
     height: 100%;
     position: fixed;
     left: 0;
-    top: 0;
+    top: 40px;
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
@@ -168,6 +168,35 @@ h3 {
 
 .msi-map-tooltip {
     font-size: 10px;
+}
+
+.layer-switcher {
+    display: none;
+    z-index: 300;
+}
+
+.layer-switcher label {
+    font-size: 10px;
+    font-weight: normal;
+    margin-bottom: 3px;
+    margin-left: 2px;
+}
+
+.layer-switcher .baseLbl, .layer-switcher .dataLbl {
+    display: none;
+}
+
+@media (min-width: 400px) {
+    .layer-switcher {
+        display: block;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background-color: rgba(255,255,255,0.4);
+        font-size: 11px;
+        padding: 10px;
+        border-radius:5px;
+    }
 }
 
 .visible-on-map {

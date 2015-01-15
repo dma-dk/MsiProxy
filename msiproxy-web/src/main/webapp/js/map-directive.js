@@ -42,8 +42,8 @@ angular.module('msiproxy.app')
                         }
                     };
 
-                    var msiLayer  = new OpenLayers.Layer.Vector( "Msi-Nm", {
-                        displayInLayerSwitcher: false,
+                    var msiLayer  = new OpenLayers.Layer.Vector( "MSI", {
+                        displayInLayerSwitcher: true,
                         styleMap: new OpenLayers.StyleMap({
                             "default": new OpenLayers.Style({
                                 externalGraphic : "${icon}",
@@ -78,7 +78,21 @@ angular.module('msiproxy.app')
                     layers.push(new OpenLayers.Layer.OSM("OSM", [
                         '//a.tile.openstreetmap.org/${z}/${x}/${y}.png',
                         '//b.tile.openstreetmap.org/${z}/${x}/${y}.png',
-                        '//c.tile.openstreetmap.org/${z}/${x}/${y}.png' ], null));
+                        '//c.tile.openstreetmap.org/${z}/${x}/${y}.png' ], {
+                        displayInLayerSwitcher: false
+                    }));
+
+                    // NB WMS layer gets proxied via "/wms/" to mask out colors and hide service-name, login and password
+                    // For direct access, substitute "/wms/" with: http://kortforsyningen.kms.dk/
+                    layers.push(new OpenLayers.Layer.WMS("WMS", "/wms/", {
+                            layers : 'cells',
+                            transparent : 'true',
+                            styles : 'default'
+                        }, {
+                            isBaseLayer : false,
+                            visibility : false,
+                            projection : 'EPSG:3857'
+                        }));
 
                     // Add the MSI layer
                     layers.push(msiLayer);
@@ -97,11 +111,14 @@ angular.module('msiproxy.app')
                         zoom: zoom
                     });
 
-/*
+
+                    // Show a layer switcher
                     map.addControl(new OpenLayers.Control.LayerSwitcher({
-                        'div' : OpenLayers.Util.getElement('search-layerswitcher')
+                        'div' : OpenLayers.Util.getElement('msi-layerswitcher')
                     }));
-*/
+
+                    // Add zoom buttons
+                    map.addControl(new OpenLayers.Control.Zoom());
 
                     /*********************************/
                     /* Hover Tooltip                 */
@@ -111,8 +128,8 @@ angular.module('msiproxy.app')
                         var msg = feature.data.msi;
                         var desc =
                             '<div class="msi-map-tooltip">' +
-                            '<div>' + LangService.messageTitleLine(msg) + '</div>' +
-                            '<div>' + LangService.messageTime(msg) + '</div>' +
+                              '<div>' + LangService.messageTitleLine(msg) + '</div>' +
+                              '<div><small>' + LangService.messageTime(msg) + '</small></div>' +
                             '</div>';
                         return desc;
                     }
@@ -131,6 +148,7 @@ angular.module('msiproxy.app')
                                     true,
                                     null);
 
+                                popup.maxSize = new OpenLayers.Size(200,300);
                                 feature.popup = popup;
 
                                 map.addPopup(popup);
