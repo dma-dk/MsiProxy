@@ -22,3 +22,22 @@ function plain2html(text) {
         .replace(/ /g, "&#8203;&nbsp;&#8203;")
         .replace(/\r\n|\r|\n/g, "<br />");
 }
+
+/**
+ * formats the series identifier.
+ * If the number is undefined, the blank string is returned
+ * @param msg the series identifier
+ */
+function formatSeriesIdentifier(msg) {
+    if (msg && msg.seriesIdentifier && msg.seriesIdentifier.number) {
+        var id = msg.seriesIdentifier.fullId;
+        if (msg.type == 'TEMPORARY_NOTICE') {
+            id += '(T)';
+        } else if (msg.type == 'PRELIMINARY_NOTICE') {
+            id += '(P)';
+        }
+        id += '.';
+        return id;
+    }
+    return '';
+}

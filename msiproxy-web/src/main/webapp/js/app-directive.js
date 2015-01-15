@@ -43,7 +43,7 @@ angular.module('msiproxy.app')
             scope: {
                 msg: "=",
                 messages: "=",
-                format: "@?"
+                format: "@"
             },
             link: function(scope, element, attrs) {
                 scope.language = $rootScope.language;
@@ -62,17 +62,10 @@ angular.module('msiproxy.app')
                 msiMessageId: "="
             },
             link: function(scope, element, attrs) {
-                var msg = scope.msiMessageId;
-                if (msg.seriesIdentifier.number) {
-                    var id = msg.seriesIdentifier.fullId;
-                    if (msg.type == 'TEMPORARY_NOTICE') {
-                        id += '(T)';
-                    } else if (msg.type == 'PRELIMINARY_NOTICE') {
-                        id += '(P)';
-                    }
-                    id += '.';
-                    element.html(id);
-                }
+                scope.$watch(
+                    function() { return scope.msiMessageId; },
+                    function (msg) { element.html(formatSeriesIdentifier(msg)); },
+                    true);
             }
         };
     }])
@@ -88,7 +81,10 @@ angular.module('msiproxy.app')
                 msiMessageTitle: "="
             },
             link: function(scope, element, attrs) {
-                element.html(LangService.messageTitleLine(scope.msiMessageTitle));
+                scope.$watch(
+                    function() { return scope.msiMessageTitle; },
+                    function (msg) { element.html(LangService.messageTitleLine(scope.msiMessageTitle)); },
+                    true);
             }
         };
     }])
@@ -134,7 +130,10 @@ angular.module('msiproxy.app')
                 msg: "="
             },
             link: function(scope, element, attrs) {
-                element.html(LangService.messageTime(scope.msg));
+                scope.$watch(
+                    function() { return scope.msg; },
+                    function (msg) { element.html(LangService.messageTime(scope.msg)); },
+                    true);
             }
         };
     }]);
