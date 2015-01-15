@@ -1,6 +1,7 @@
 package dk.dma.msiproxy.web;
 
 import dk.dma.msiproxy.common.util.PositionFormatter;
+import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.model.msi.Area;
 import dk.dma.msiproxy.model.msi.Message;
 
@@ -66,5 +67,14 @@ public class TldFunctions {
             pos.append(PositionFormatter.format(locale, fmt.getLonFormat(), lon));
         }
         return pos.toString();
+    }
+
+    /**
+     * Converts the given plain text to HTML
+     * @param txt the plain text
+     * @return the HTML
+     */
+    public static String txt2html(String txt) {
+        return TextUtils.txt2html(txt);
     }
 }

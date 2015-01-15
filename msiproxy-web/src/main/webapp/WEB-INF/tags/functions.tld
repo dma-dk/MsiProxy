@@ -26,4 +26,10 @@
         <function-class>dk.dma.msiproxy.web.TldFunctions</function-class>
         <function-signature>java.lang.String formatPos(java.util.Locale,java.lang.String,java.lang.Double,java.lang.Double)</function-signature>
     </function>
+
+    <function>
+        <name>txt2html</name>
+        <function-class>dk.dma.msiproxy.web.TldFunctions</function-class>
+        <function-signature>java.lang.String txt2html(java.lang.String)</function-signature>
+    </function>
 </taglib>

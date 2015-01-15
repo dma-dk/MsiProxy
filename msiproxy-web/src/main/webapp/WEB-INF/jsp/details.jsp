@@ -145,7 +145,7 @@
                         <td class="field-value">
                             <c:choose>
                                 <c:when test="${not empty msg.descs and not empty msg.descs[0].time}">
-                                    ${msg.descs[0].time}
+                                    ${msi:txt2html(msg.descs[0].time)}
                                 </c:when>
                                 <c:otherwise>
                                     <fmt:formatDate value="${msg.validFrom}" type="both" dateStyle="medium" timeStyle="medium"/>
