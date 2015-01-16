@@ -1,5 +1,5 @@
 /**
- * The MSI-Proxy controller
+ * The main MSI-Proxy controller
  */
 angular.module('msiproxy.app')
     .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', '$modal', 'MsiProxyService', 'LangService',
@@ -11,7 +11,10 @@ angular.module('msiproxy.app')
             $scope.lang = $routeParams.lang;
             $scope.viewMode = 'details';
 
-            // Called to initialize the controller
+            /**
+             * Called to initialize the controller with view mode.
+             * @param viewMode the view mode, one of "details", "grid" or "map"
+             */
             $scope.init = function (viewMode) {
                 $scope.viewMode = viewMode;
 
@@ -32,7 +35,10 @@ angular.module('msiproxy.app')
                 )
             };
 
-            // Scans through the search result and marks all messages that should potentially display an area head line
+            /**
+             * Scans through the search result and marks all messages that should potentially display an area head line
+             * @param maxLevels the number of root areas to include in the area headings
+             */
             $scope.checkGroupByArea = function (maxLevels) {
                 var lastAreaId = undefined;
                 if ($scope.messages) {
@@ -53,29 +59,32 @@ angular.module('msiproxy.app')
                 }
             };
 
-            // Change the view mode of the message list
+            /**
+             * Change the view mode of the message list
+             * @param viewMode the new view mode
+             */
             $scope.go = function(viewMode) {
                 $location.path( '/' + $scope.provider + '/' + $scope.lang + '/' + viewMode );
             };
 
-            // Export a PDF of the message list
+            /**
+             * Export a PDF of the message list
+             */
             $scope.pdf = function () {
                 $window.open('/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang, '_blank');
             };
 
-            // Register for 'messageDetails' events, and launch the message details dialog
+            /**
+             * Register for 'messageDetails' events, and launch the message details dialog
+             */
             $scope.$on('messageDetails', function (event, data) {
                 $modal.open({
                     controller: "MessageDialogCtrl",
                     templateUrl: "/partials/message-details-dialog.html",
                     size: 'lg',
                     resolve: {
-                        message: function () {
-                            return data.message;
-                        },
-                        messages: function () {
-                            return data.messages;
-                        }
+                        message: function () { return data.message; },
+                        messages: function () { return data.messages; }
                     }
                 });
             });
@@ -95,7 +104,9 @@ angular.module('msiproxy.app')
             $scope.index = $.inArray(message, messages);
 
 
-            // Navigate to the previous message in the message list
+            /**
+             * Navigate to the previous message in the message list
+             */
             $scope.selectPrev = function() {
                 if ($scope.index > 0) {
                     $scope.index--;
@@ -103,7 +114,9 @@ angular.module('msiproxy.app')
                 }
             };
 
-            // Navigate to the next message in the message list
+            /**
+             * Navigate to the next message in the message list
+             */
             $scope.selectNext = function() {
                 if ($scope.index >= 0 && $scope.index < $scope.messages.length - 1) {
                     $scope.index++;
@@ -111,7 +124,9 @@ angular.module('msiproxy.app')
                 }
             };
 
-            // Export a PDF of the message list
+            /**
+             * Export a PDF with the current message
+             */
             $scope.pdf = function () {
                 $window.open('/details.pdf?provider=' + $scope.msg.provider
                     + '&lang=' + $scope.language

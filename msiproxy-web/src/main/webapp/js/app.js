@@ -1,9 +1,8 @@
 /**
- * The main MSI-proxy app module
+ * The main MSI-proxy app module definition.
  *
- * @type {angular.Module}
+ * Define the routes of the single page application.
  */
-
 
 var app = angular.module('msiproxy.app', [ 'ngRoute', 'ngSanitize', 'ui.bootstrap', 'pascalprecht.translate' ])
     .config(['$routeProvider', function ($routeProvider) {

@@ -82,7 +82,7 @@ angular.module('msiproxy.app')
              * @returns the OpenLayers Point
              */
             toPt: function(lon, lat) {
-                return createPoint(loc.points[j].lon, loc.points[j].lat);
+                return createPoint(lon, lat);
             },
 
             /**
@@ -112,7 +112,7 @@ angular.module('msiproxy.app')
                 switch (loc.type) {
                     case 'POINT':
                         for (var j in loc.points) {
-                            features.push(new OpenLayers.Feature.Vector(createPoint(loc.points[j].lon, loc.points[j].lat), attr));
+                            features.push(new OpenLayers.Feature.Vector(this.toPt(loc.points[j].lon, loc.points[j].lat), attr));
                         }
                         break;
 
@@ -149,6 +149,8 @@ angular.module('msiproxy.app')
 
             /**
              * Zooms the map the the extent of the given layer
+             * @param map the map
+             * @param layer the layer
              */
             zoomToExtent : function(map, layer) {
                 var extent = new OpenLayers.Bounds();
@@ -176,21 +178,6 @@ angular.module('msiproxy.app')
 
                     map.zoomToExtent(extent);
                 }
-            },
-
-            zoomToFeature : function(map, feature) {
-                // If the feature is a point (or clost to it), select a greated extent
-                var min = 10000;
-                var extent = feature.geometry.getBounds();
-                if (Math.abs(extent.bottom - extent.top) < 100 && Math.abs(extent.right - extent.left) < 100) {
-                    var size = 20000;
-                    extent.bottom -= size;
-                    extent.left -= size;
-                    extent.right += size;
-                    extent.top += size;
-                }
-
-                map.zoomToExtent(extent);
             }
         }
     }]);

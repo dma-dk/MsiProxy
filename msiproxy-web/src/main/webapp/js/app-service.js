@@ -12,6 +12,13 @@ angular.module('msiproxy.app')
 
         return {
 
+            /**
+             * Fetches a list of messages from the server
+             * @param provider the MSI provider
+             * @param lang the language
+             * @param success called if the request is successful
+             * @param error called if the request fails
+             */
             messages: function(provider, lang, success, error) {
                 $http.get('/rest/' + provider + '/v1/service/messages?lang=' + lang)
                     .success(success)
@@ -22,18 +29,29 @@ angular.module('msiproxy.app')
     }])
 
     /********************************
-     * The language service is used for changing language, etc.
+     * The language service is used for changing language,
+     * and formatting various MSI specific features in
+     * a language specific manner.
      ********************************/
     .service('LangService', ['$rootScope', '$translate',
         function ($rootScope, $translate) {
             'use strict';
 
+            /**
+             * Registers the current language
+             * @param lang the language
+             */
             this.changeLanguage = function(lang) {
                 $translate.use(lang);
                 $rootScope.language = lang;
             };
 
-            // look for a description entity with the given language
+            /**
+             * look for a description entity with the given language
+             * @param elm the localized entity
+             * @param lang the language
+             * @returns a description entity with the given language
+             */
             this.descForLanguage = function(elm, lang) {
                 if (elm && elm.descs) {
                     for (var d in elm.descs) {
@@ -45,16 +63,11 @@ angular.module('msiproxy.app')
                 return undefined;
             };
 
-            // look for a description entity with the given language - falls back to using the first description
-            this.descForLangOrDefault = function(elm, lang) {
-                var desc = this.descForLanguage(elm, (lang) ? lang : $rootScope.language);
-                if (!desc && elm && elm.descs && elm.descs.length > 0) {
-                    desc = elm.descs[0];
-                }
-                return desc;
-            };
-
-            // look for a description entity with the current language
+            /**
+             * look for a description entity for the current language
+             * @param elm the localized entity
+             * @returns a description entity for the current language
+             */
             this.desc = function(elm) {
                 return this.descForLanguage(elm, $rootScope.language);
             };

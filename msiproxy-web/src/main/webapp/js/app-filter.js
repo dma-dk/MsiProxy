@@ -3,6 +3,9 @@
  */
 angular.module('msiproxy.app')
 
+    /********************************
+     * Combined an array of values to a singe line
+     ********************************/
     .filter('serialize', function () {
         return function (input, separator) {
             input = input || [];
@@ -10,14 +13,25 @@ angular.module('msiproxy.app')
         };
     })
 
+    /********************************
+     * Transforms plain text to HTML
+     ********************************/
     .filter('plain2html', function () {
         return function (text) {
             return plain2html(text);
         };
     })
 
+    /********************************
+     * Formats a lon-lat position
+     ********************************/
     .filter('lonlat', function() {
 
+        /**
+         * Formats the longitude as a string
+         * @param longitude the longitude
+         * @returns the string representation
+         */
         function formatLongitude(longitude) {
             var ns = "E";
             if (longitude < 0) {
@@ -35,6 +49,11 @@ angular.module('msiproxy.app')
             return (hours / 1000.0).toFixed(3).substring(2) + " " + lonStr + ns;
         }
 
+        /**
+         * Formats the latitude as a string
+         * @param latitude the longitude
+         * @returns the string representation
+         */
         function formatLatitude(latitude) {
             var ns = "N";
             if (latitude < 0) {
@@ -52,6 +71,11 @@ angular.module('msiproxy.app')
             return (hours / 100.0).toFixed(2).substring(2) + " " + latStr + ns;
         }
 
+        /**
+         * Formats the position as a string
+         * @param lonlat the position
+         * @returns the string representation
+         */
         function formatLonLat(lonlat) {
             return formatLatitude(lonlat.lat) + "  " + formatLongitude(lonlat.lon);
         }
