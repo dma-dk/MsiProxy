@@ -22,7 +22,7 @@
         body{
             font-size:11px;
             font-family: Helvetica;
-            margin: 0;
+            margin: 10px;
             padding:0;
         }
 
@@ -30,9 +30,9 @@
             color: #000000;
         }
 
-        h4 {
+        h2 {
             color: #8f2f7b;
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 10px;
             margin-top: 20px;
         }
@@ -95,7 +95,7 @@
         <c:if test="${not empty areaHeading and areaHeadingId != areaHeading.id}">
             <c:set var="areaHeadingId" value="${areaHeading.id}"/>
             <tr>
-                <td colspan="2"><h4>${msi:areaLineage(areaHeading)}</h4></td>
+                <td colspan="2"><h2>${msi:areaLineage(areaHeading, null)}</h2></td>
             </tr>
         </c:if>
         <tr>
@@ -111,12 +111,8 @@
                 </c:if>
                 <div>
                     <strong>
-                        <c:if test="${not empty msg.seriesIdentifier.number}">${msg.seriesIdentifier.fullId}.</c:if>
-                        <c:if test="${not empty msg.area}">${msi:areaLineage(msg.area)}</c:if>
-                        <c:if test="${not empty msg.descs}">
-                            <c:if test="${not empty msg.descs[0].vicinity}"> - ${msg.descs[0].vicinity}</c:if>
-                            <c:if test="${not empty msg.descs[0].title}"> - ${msg.descs[0].title}</c:if>
-                        </c:if>
+                        <c:if test="${not empty msg.seriesIdentifier.number}">${msg.seriesIdentifier.fullId}: </c:if>
+                        ${msi:messageTitleLine(msg, areaHeading)}
                     </strong>
                 </div>
 

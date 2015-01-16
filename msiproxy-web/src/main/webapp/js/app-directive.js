@@ -15,16 +15,20 @@ angular.module('msiproxy.app')
                 restrict: 'A',
                 scope: {
                     message: "=",
-                    messages: "="
+                    messages: "=",
+                    disabled: "=?"
                 },
                 link: function(scope, element, attrs) {
 
-                    element.bind('click', function() {
-                        $rootScope.$broadcast('messageDetails', {
-                            message: scope.message,
-                            messages: scope.messages
+                    if (!scope.disabled) {
+                        element.css('cursor', 'pointer');
+                        element.bind('click', function() {
+                            $rootScope.$broadcast('messageDetails', {
+                                message: scope.message,
+                                messages: scope.messages
+                            });
                         });
-                    });
+                    }
                 }
             };
         }])
@@ -43,11 +47,13 @@ angular.module('msiproxy.app')
             scope: {
                 msg: "=",
                 messages: "=",
-                format: "@"
+                format: "@",
+                excludeAreaHeading: "=?"
             },
             link: function(scope, element, attrs) {
                 scope.language = $rootScope.language;
                 scope.format = scope.format || 'list';
+                scope.excludeAreaHeading = (scope.format == 'list');
             }
         };
     }])
@@ -78,12 +84,13 @@ angular.module('msiproxy.app')
         return {
             restrict: 'A',
             scope: {
-                msiMessageTitle: "="
+                msiMessageTitle: "=",
+                excludeAreaHeading: "=?"
             },
             link: function(scope, element, attrs) {
                 scope.$watch(
                     function() { return scope.msiMessageTitle; },
-                    function (msg) { element.html(LangService.messageTitleLine(scope.msiMessageTitle)); },
+                    function (msg) { element.html(LangService.messageTitleLine(scope.msiMessageTitle, scope.excludeAreaHeading)); },
                     true);
             }
         };
@@ -96,10 +103,11 @@ angular.module('msiproxy.app')
         return {
             restrict: 'A',
             scope: {
-                msiMessageArea: "="
+                msiMessageArea: "=",
+                excludeAreaHeading: "=?"
             },
             link: function(scope, element, attrs) {
-                element.html(LangService.messageAreaLineage(scope.msiMessageArea));
+                element.html(LangService.messageAreaLineage(scope.msiMessageArea, scope.excludeAreaHeading));
             }
         };
     }])
@@ -112,10 +120,11 @@ angular.module('msiproxy.app')
             restrict: 'A',
             scope: {
                 msiArea: "=",
-                areaDivider: "@"
+                areaDivider: "@",
+                excludeAreaHeading: "=?"
             },
             link: function(scope, element, attrs) {
-                element.html(LangService.areaLineage(scope.msiArea, undefined));
+                element.html(LangService.areaLineage(scope.msiArea, undefined, scope.excludeAreaHeading));
             }
         };
     }])

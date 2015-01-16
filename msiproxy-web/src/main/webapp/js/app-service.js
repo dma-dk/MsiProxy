@@ -10,6 +10,37 @@ angular.module('msiproxy.app')
     .factory('MsiProxyService', [ '$http', '$rootScope', function($http, $rootScope) {
         'use strict';
 
+        /**
+         * Scans through the search result and marks all messages that should potentially display an area head line
+         * @param messages the messages to group by area
+         * @param maxLevels the number of root areas to include in the area headings
+         */
+        function checkGroupByArea(messages, maxLevels) {
+            var lastAreaId = undefined;
+            if (messages) {
+                for (var m in messages) {
+                    var msg = messages[m];
+                    var areas = [];
+                    for (var area = msg.area; area !== undefined; area = area.parent) {
+                        areas.unshift(area);
+                    }
+                    if (areas.length > 0) {
+                        // If the message has a new sub-area at the maxLevels'th root level,
+                        // flag it by setting the areaHeading message attribute to this area.
+                        var index = Math.min(areas.length - 1, maxLevels - 1);
+                        area = areas[index];
+                        if (!lastAreaId || area.id != lastAreaId) {
+                            lastAreaId = area.id;
+                            msg.areaHeading = area;
+                        }
+
+                        // Flag that the area is the current area heading
+                        area.areaHeading = true;
+                    }
+                }
+            }
+        }
+
         return {
 
             /**
@@ -21,7 +52,13 @@ angular.module('msiproxy.app')
              */
             messages: function(provider, lang, success, error) {
                 $http.get('/rest/' + provider + '/v1/service/messages?lang=' + lang)
-                    .success(success)
+                    .success(function (messages) {
+                        // First, group the messages by area
+                        checkGroupByArea(messages, 2);
+
+                        // Hand over the messages to the callee
+                        success(messages);
+                    })
                     .error(error);
             }
 
@@ -76,11 +113,12 @@ angular.module('msiproxy.app')
              * Returns the area lineage description for the area using the current language
              * @param area the area lineage description for the area
              * @param vicinity an optional vicinity parameter
+             * @param excludeAreaHeading whether to exclude the area heading or not
              */
-            this.areaLineage = function(area, vicinity) {
+            this.areaLineage = function(area, vicinity, excludeAreaHeading) {
                 var divider = " - ";
                 var areas = (vicinity) ? vicinity : '';
-                while (area) {
+                while (area && (!excludeAreaHeading || !area.areaHeading)) {
                     var desc = this.desc(area);
                     var areaName = (desc) ? desc.name : '';
                     areas = areaName + ((areas.length > 0 && areaName.length > 0) ? divider : '') + areas;
@@ -93,20 +131,22 @@ angular.module('msiproxy.app')
              * Returns the message area lineage description for the area using the current language.
              * This is composed of the area lineage + the vicinity of the message
              * @param msg the message to return the area lineage description for
+             * @param excludeAreaHeading whether to exclude the area heading or not
              */
-            this.messageAreaLineage = function(msg) {
+            this.messageAreaLineage = function(msg, excludeAreaHeading) {
                 var desc = this.desc(msg);
-                return this.areaLineage(msg.area, (desc) ? desc.vicinity : undefined);
+                return this.areaLineage(msg.area, (desc) ? desc.vicinity : undefined, excludeAreaHeading);
             };
 
             /**
              * Returns the message title line using the current language.
              * This is composed of the area lineage + the vicinity of the message + title of the message
              * @param msg the message to return the title line for
+             * @param excludeAreaHeading whether to exclude the area heading or not
              */
-            this.messageTitleLine = function(msg) {
+            this.messageTitleLine = function(msg, excludeAreaHeading) {
                 var desc = this.desc(msg);
-                var title = this.messageAreaLineage(msg);
+                var title = this.messageAreaLineage(msg, excludeAreaHeading);
                 if (desc && desc.title) {
                     title = title + ' - ' + desc.title;
                 }

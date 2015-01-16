@@ -18,7 +18,13 @@
     <function>
         <name>areaLineage</name>
         <function-class>dk.dma.msiproxy.web.TldFunctions</function-class>
-        <function-signature>java.lang.String getAreaLineage(dk.dma.msiproxy.model.msi.Area)</function-signature>
+        <function-signature>java.lang.String getAreaLineage(dk.dma.msiproxy.model.msi.Area, dk.dma.msiproxy.model.msi.Area)</function-signature>
+    </function>
+
+    <function>
+        <name>messageTitleLine</name>
+        <function-class>dk.dma.msiproxy.web.TldFunctions</function-class>
+        <function-signature>java.lang.String getMessageTitleLine(dk.dma.msiproxy.model.msi.Message,dk.dma.msiproxy.model.msi.Area)</function-signature>
     </function>
 
     <function>

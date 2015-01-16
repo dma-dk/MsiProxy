@@ -36,7 +36,7 @@ function formatSeriesIdentifier(msg) {
         } else if (msg.type == 'PRELIMINARY_NOTICE') {
             id += '(P)';
         }
-        id += '.';
+        id += ': ';
         return id;
     }
     return '';

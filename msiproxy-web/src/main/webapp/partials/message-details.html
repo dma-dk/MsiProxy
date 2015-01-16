@@ -4,11 +4,15 @@
     <!-- View mode menu bar -->
     <div ng-include="'partials/view-modes.html'"></div>
 
-    <table class='table table-condensed'>
-        <tr ng-repeat-start="msg in messages"  ng-if="msg.areaHeading">
-            <td colspan="2"><h4 class="msi-area-heading" msi-area="msg.areaHeading"></h4></td>
-        </tr>
-        <tr ng-repeat-end msi-render-message-details msg="msg" messages="messages" ></tr>
-    </table>
+    <div style="margin: 10px">
+        <table class="table table-condensed">
+            <tr ng-repeat-start="msg in messages"  ng-if="msg.areaHeading">
+                <td colspan="2" style="border: none">
+                    <h2 class="msi-area-heading" style="margin-bottom: 5px;" msi-area="msg.areaHeading"></h2>
+                </td>
+            </tr>
+            <tr ng-repeat-end msi-render-message-details msg="msg" messages="messages" ></tr>
+        </table>
+    </div>
 
 </div>

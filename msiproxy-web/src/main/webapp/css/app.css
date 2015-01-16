@@ -57,17 +57,28 @@ h3 {
     transform: translate(0, 0);
 }
 
+.borderless {
+    border: none;
+}
+
 /**
  * Message details styles
  */
 
 .msi-area-heading {
     color: #8f2f7b;
-    font-size: 16px;
+    font-size: 18px;
+    border-bottom: 1px dashed lightgray;
 }
 
 .msi-details-image img {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    border: 2px solid #fff;
     display: none;
+}
+
+.msi-details-image img:hover {
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
 }
 
 @media (min-width: 500px) {
@@ -75,20 +86,16 @@ h3 {
         display: block;
         width: 120px;
         height: 120px;
-        border-radius:5px;
-        box-shadow: 0 0 1px 2px rgba(0, 0, 0, .1);
     }
 }
 @media (min-width: 800px) {
     .msi-details-image img {
-        display: block;
         width: 200px;
         height: 200px;
     }
 }
 
 .msi-details-item {
-    width: 100%;
     font-size: 11px;
 }
 

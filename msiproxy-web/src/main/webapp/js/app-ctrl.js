@@ -27,36 +27,11 @@ angular.module('msiproxy.app')
                     $scope.lang,
                     function(data) {
                         $scope.messages = data;
-                        $scope.checkGroupByArea(2);
                     },
                     function () {
                         console.error("Error fetching messages");
                     }
                 )
-            };
-
-            /**
-             * Scans through the search result and marks all messages that should potentially display an area head line
-             * @param maxLevels the number of root areas to include in the area headings
-             */
-            $scope.checkGroupByArea = function (maxLevels) {
-                var lastAreaId = undefined;
-                if ($scope.messages) {
-                    for (var m in $scope.messages) {
-                        var msg = $scope.messages[m];
-                        var areas = [];
-                        for (var area = msg.area; area !== undefined; area = area.parent) {
-                            areas.unshift(area);
-                        }
-                        if (areas.length > 0) {
-                            area = areas[Math.min(areas.length - 1, maxLevels - 1)];
-                            if (!lastAreaId || area.id != lastAreaId) {
-                                lastAreaId = area.id;
-                                msg.areaHeading = area;
-                            }
-                        }
-                    }
-                }
             };
 
             /**
