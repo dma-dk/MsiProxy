@@ -31,7 +31,8 @@
 
     <!-- Time line -->
     <div class="row">
-        <div class="col-sm-1 msi-details-item-field" translate>FIELD_TIME</div>
+        <!-- A grotesque hack to fix an angular/iPad error - see MSINM-170 -->
+        <div class="col-sm-1 msi-details-item-field" >{{language == 'da' ? 'Tid' : 'Time'}}</div>
         <div class="col-sm-11 msi-details-item-value">
             <msi-valid-from-to msg="msg"></msi-valid-from-to>
         </div>
