@@ -181,7 +181,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
             // Check if there are any changes to the current list of messages
             if (isMessageListUnchanged(activeMessages)) {
-                log.info("Legacy MSI messages not changed");
+                log.trace("Legacy MSI messages not changed");
                 return messages;
             }
 

@@ -120,7 +120,7 @@ public class DkMsiNmProviderService extends AbstractProviderService {
             try (InputStream is = con.getInputStream()) {
                 MessageSearchResult searchResult = JsonUtils.fromJson(is, MessageSearchResult.class);
                 setActiveMessages(searchResult.getMessages());
-                log.info(String.format("Loaded %d MSI-NM messages in %s ms", messages.size(), System.currentTimeMillis() - t0));
+                log.trace(String.format("Loaded %d MSI-NM messages in %s ms", messages.size(), System.currentTimeMillis() - t0));
             }
 
         } catch (Exception e) {
