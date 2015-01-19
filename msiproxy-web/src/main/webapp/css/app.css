@@ -82,13 +82,20 @@ h3 {
 }
 
 @media (min-width: 500px) {
+    .msi-details-image {
+        width: 130px;
+    }
     .msi-details-image img {
         display: block;
         width: 120px;
         height: 120px;
+        margin-bottom: 10px;
     }
 }
 @media (min-width: 800px) {
+    .msi-details-image {
+        width: 210px;
+    }
     .msi-details-image img {
         width: 200px;
         height: 200px;
@@ -97,11 +104,12 @@ h3 {
 
 .msi-details-item {
     font-size: 11px;
+    margin-bottom: 10px;
 }
 
 .msi-details-item-field {
     font-style: italic;
-    color: #666;
+    color: gray;
     padding-top: 5px;
 }
 
@@ -133,6 +141,10 @@ h3 {
 
 .msi-grid-item:hover {
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.msi-grid-item:hover .msi-grid-item-details {
+    height: 80px;
 }
 
 .msi-grid-item-image {
@@ -170,6 +182,10 @@ h3 {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 5px 8px 5px 8px;
+
+    -webkit-transition: height 0.3s;
+    -moz-transition: height 0.3s;
+    transition: height 0.3s;
 }
 
 .msi-map {
