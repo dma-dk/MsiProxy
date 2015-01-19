@@ -6,6 +6,7 @@ import dk.dma.msiproxy.common.provider.Providers;
 import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.JsonUtils;
+import dk.dma.msiproxy.model.msi.Attachment;
 import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
 
@@ -35,8 +36,8 @@ public class DkMsiNmProviderService extends AbstractProviderService {
     public static final String[] LANGUAGES = { "da", "en" };
 
     @Inject
-    @Setting(value = "dkmsinmUrl", defaultValue = "https://msinm-test.e-navigation.net/rest/messages/published?sortBy=AREA&sortOrder=ASC")
-    String url;
+    @Setting(value = "dkmsinmUrl", defaultValue = "https://msinm-test.e-navigation.net")
+    String serverUrl;
 
     @Inject
     Logger log;
@@ -110,6 +111,15 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         loadMessages();
     }
 
+
+    /**
+     * Returns the url for fetching the list of active messages sorted by area
+     * @return the list of active messages sorted by area
+     */
+    private String getActiveMessagesUrl() {
+        return serverUrl + "/rest/messages/published?sortBy=AREA&sortOrder=ASC&attachments=true";
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -118,7 +128,7 @@ public class DkMsiNmProviderService extends AbstractProviderService {
 
         long t0 = System.currentTimeMillis();
         try {
-            URLConnection con = new URL(url).openConnection();
+            URLConnection con = new URL(getActiveMessagesUrl()).openConnection();
             con.setConnectTimeout(5000); //  5 seconds
             con.setReadTimeout(10000);   // 10 seconds
 
@@ -159,6 +169,9 @@ public class DkMsiNmProviderService extends AbstractProviderService {
                         !Objects.equals(msg.getUpdated(), activeMsg.getUpdated())) {
                     return false;
                 }
+                if (!isAttachmentsUnchanged(msg.getAttachments(), activeMsg.getAttachments())) {
+                    return false;
+                }
             }
             // No changes
             return true;
@@ -167,5 +180,26 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         return false;
     }
 
+    /**
+     * Checks if the list of attachments have changed
+     * @param attachments1 the first list of attachments
+     * @param attachments2 the second list of attachments
+     * @return if the list of attachments have changed
+     */
+    private boolean isAttachmentsUnchanged(List<Attachment> attachments1, List<Attachment> attachments2) {
+        if (attachments1 == null && attachments2 == null) {
+            return true;
+        } else if (attachments1 == null || attachments2 == null || attachments1.size() != attachments2.size()) {
+            return false;
+        }
+        for (int x = 0; x < attachments1.size(); x++) {
+            Attachment att1 = attachments1.get(x);
+            Attachment att2 = attachments2.get(x);
+            if (!Objects.equals(att1.getUpdated(), att2.getUpdated())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

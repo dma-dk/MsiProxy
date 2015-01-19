@@ -18,6 +18,7 @@ package dk.dma.msiproxy.common.repo;
 import dk.dma.msiproxy.common.MsiProxyApp;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.WebUtils;
+import dk.dma.msiproxy.model.msi.Attachment;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.slf4j.Logger;
@@ -213,7 +214,9 @@ public class RepositoryService {
 
         if (Files.notExists(f) || Files.isDirectory(f)) {
             log.warn("Failed streaming file: " + f);
-            throw new WebApplicationException(404);
+            return Response
+                    .status(404)
+                    .build();
         }
 
         // Set expiry to cacheTimeout minutes
@@ -284,9 +287,9 @@ public class RepositoryService {
     @javax.ws.rs.Path("/list/{folder:.+}")
     @Produces("application/json;charset=UTF-8")
     @NoCache
-    public List<RepoFileVo> listFiles(@PathParam("folder") String path) throws IOException {
+    public List<Attachment> listFiles(@PathParam("folder") String path) throws IOException {
 
-        List<RepoFileVo> result = new ArrayList<>();
+        List<Attachment> result = new ArrayList<>();
         Path folder = repoRoot.resolve(path);
 
         if (Files.exists(folder) && Files.isDirectory(folder)) {
@@ -300,10 +303,16 @@ public class RepositoryService {
 
             Files.newDirectoryStream(folder, filter)
                     .forEach(f -> {
-                        RepoFileVo vo = new RepoFileVo();
+                        Attachment vo = new Attachment();
                         vo.setName(f.getFileName().toString());
                         vo.setPath(WebUtils.encodeURI(path + "/" + f.getFileName().toString()));
                         vo.setDirectory(Files.isDirectory(f));
+                        try {
+                            vo.setUpdated(new Date(Files.getLastModifiedTime(f).toMillis()));
+                            vo.setSize(Files.size(f));
+                        } catch (Exception e) {
+                            log.trace("Error reading file attribute for " + f);
+                        }
                         result.add(vo);
                     });
         }

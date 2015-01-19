@@ -35,7 +35,7 @@ import java.util.Set;
  */
 @XmlRootElement(name = "message")
 @XmlType(propOrder = {"seriesIdentifier", "type", "status", "area", "categories", "charts", "horizontalDatum", "validFrom", "validTo",
-        "locations", "descs", "cancellationDate", "references", "lightsListNumbers", "originalInformation", "provider"})
+        "locations", "descs", "cancellationDate", "references", "lightsListNumbers", "originalInformation", "attachments", "provider"})
 public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     Integer id;
@@ -56,6 +56,7 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
     Set<Reference> references;
     List<String> lightsListNumbers;
     Boolean originalInformation;
+    List<Attachment> attachments;
     String provider;
 
     /**
@@ -110,6 +111,10 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
                 checkCreateLightsListNumbers().addAll(message.getLightsListNumbers());
             }
             originalInformation = message.getOriginalInformation();
+
+            if (message.getAttachments() != null && message.getAttachments().size() > 0) {
+                checkCreateAttachments().addAll(message.getAttachments());
+            }
         }
 
         // Sort the message according to the language
@@ -194,6 +199,17 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
             lightsListNumbers = new ArrayList<>();
         }
         return lightsListNumbers;
+    }
+
+    /**
+     * Returns or creates the list of attachments
+     * @return the list of attachments
+     */
+    public List<Attachment> checkCreateAttachments() {
+        if (attachments == null) {
+            attachments = new ArrayList<>();
+        }
+        return attachments;
     }
 
     /**
@@ -359,6 +375,14 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     public void setOriginalInformation(Boolean originalInformation) {
         this.originalInformation = originalInformation;
+    }
+
+    public List<Attachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
     }
 
     public String getProvider() {
