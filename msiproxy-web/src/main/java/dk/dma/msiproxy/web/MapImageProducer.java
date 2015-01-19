@@ -133,9 +133,9 @@ public class MapImageProducer {
             Point[] bounds = getBounds(locations);
             Point centerPt = new Point((bounds[0].getLat() + bounds[1].getLat()) / 2.0, (bounds[0].getLon() + bounds[1].getLon()) / 2.0);
 
-            // Find zoom level where polygon is at most 80% of bitmap width/height, and zoom level in
+            // Find zoom level where polygon is at most 60% of bitmap width/height, and zoom level in
             // the range of 12 to 4. See http://wiki.openstreetmap.org/wiki/Zoom_levels
-            int maxWH = (int) (mapImageSize.doubleValue() * 0.8);
+            int maxWH = (int) (mapImageSize.doubleValue() * 0.6);
             int zoom = (isSinglePoint)
                     ? zoomLevel.intValue()
                     : computeZoomLevel(bounds, maxWH, maxWH, 12, 3);
