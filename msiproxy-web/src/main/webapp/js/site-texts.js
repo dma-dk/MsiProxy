@@ -17,7 +17,7 @@ angular.module('msiproxy.app')
             'FIELD_NOTE' : 'Note',
             'FIELD_CHARTS' : 'Charts',
             'FIELD_PUBLICATION' : 'Publication',
-            'REF_REPITITION' : '(repitition)',
+            'REF_REPETITION' : '(repetition)',
             'REF_CANCELLED' : '(cancelled)',
             'REF_UPDATED' : '(updated)'
 
@@ -34,7 +34,7 @@ angular.module('msiproxy.app')
             'FIELD_NOTE' : 'Note',
             'FIELD_CHARTS' : 'Søkort',
             'FIELD_PUBLICATION' : 'Publikation',
-            'REF_REPITITION' : '(gentagelse)',
+            'REF_REPETITION' : '(gentagelse)',
             'REF_CANCELLED' : '(udgår)',
             'REF_UPDATED' : '(ajourført)'
 
