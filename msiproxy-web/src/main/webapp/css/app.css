@@ -194,6 +194,7 @@ h3 {
     position: fixed;
     left: 0;
     top: 40px;
+    background-color: #b5d0d0;
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
