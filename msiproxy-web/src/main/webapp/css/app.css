@@ -104,7 +104,10 @@ h3 {
 
 .msi-details-item {
     font-size: 11px;
-    margin-bottom: 10px;
+}
+
+.msi-details-item-spacing {
+    margin-bottom: 20px;
 }
 
 .msi-details-item-field {
