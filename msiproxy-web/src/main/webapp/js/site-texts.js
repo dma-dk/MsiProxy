@@ -9,6 +9,11 @@ angular.module('msiproxy.app')
         $translateProvider.translations('en', {
 
             'TITLE' : 'Maritime Notifications',
+            'MENU_DETAILS' : 'Details',
+            'MENU_GRID' : 'Gallery',
+            'MENU_MAP' : 'Map',
+            'MENU_PDF' : 'PDF',
+            'BTN_CLOSE' : 'Close',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Time',
             'FIELD_LOCATION' : 'Location',
@@ -20,12 +25,16 @@ angular.module('msiproxy.app')
             'REF_REPETITION' : '(repetition)',
             'REF_CANCELLED' : '(cancelled)',
             'REF_UPDATED' : '(updated)'
-
         });
 
         $translateProvider.translations('da', {
 
             'TITLE' : 'Maritime Notifikationer',
+            'MENU_DETAILS' : 'Detaljer',
+            'MENU_GRID' : 'Galleri',
+            'MENU_MAP' : 'Kort',
+            'MENU_PDF' : 'PDF',
+            'BTN_CLOSE' : 'Luk',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Tid',
             'FIELD_LOCATION' : 'Placering',
@@ -37,7 +46,6 @@ angular.module('msiproxy.app')
             'REF_REPETITION' : '(gentagelse)',
             'REF_CANCELLED' : '(udgår)',
             'REF_UPDATED' : '(ajourført)'
-
         });
 
         $translateProvider.preferredLanguage('en');
