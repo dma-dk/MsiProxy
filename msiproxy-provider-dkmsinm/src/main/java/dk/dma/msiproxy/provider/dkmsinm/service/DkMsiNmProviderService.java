@@ -105,6 +105,10 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         return LANGUAGES;
     }
 
+    /***************************************/
+    /** Life cycle methods                **/
+    /***************************************/
+
     /**
      * Called at start up.
      */
@@ -117,6 +121,10 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         loadMessages();
     }
 
+    /***************************************/
+    /** Scheduling methods                **/
+    /***************************************/
+
     /**
      * Called every 5 minutes to update message list
      */
@@ -125,6 +133,17 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         loadMessages();
     }
 
+    /**
+     * Called every hour to clean up the message repo folder
+     */
+    @Schedule(persistent=false, second="30", minute="17", hour="*/1", dayOfWeek="*", year="*")
+    protected void cleanUpMessageRepoFolderPeriodically() {
+        cleanUpMessageRepoFolder();
+    }
+
+    /***************************************/
+    /** Message loading                   **/
+    /***************************************/
 
     /**
      * Returns the url for fetching the list of active messages sorted by area
@@ -285,6 +304,7 @@ public class DkMsiNmProviderService extends AbstractProviderService {
                 }
 
                 attachments.add(ratt);
+
             } catch (IOException e) {
                 log.error("Failed processing attachment for message " + msg.getId() + ": " + att.getPath());
             }
@@ -305,8 +325,8 @@ public class DkMsiNmProviderService extends AbstractProviderService {
             try {
                 // Process files referenced by <a> "href" attributes and <img> "src" attributes
                 Document doc = Jsoup.parse(desc.getDescription(), serverUrl);
-                attachments.addAll(convertReferencedLinks(doc, "a", "href"));
-                attachments.addAll(convertReferencedLinks(doc, "img", "src"));
+                convertReferencedLinks(attachments, doc, "a", "href");
+                convertReferencedLinks(attachments, doc, "img", "src");
                 desc.setDescription(doc.toString());
             } catch (Exception ex) {
                 log.warn("Failed parsing message description for message " + msg.getId());
@@ -317,13 +337,12 @@ public class DkMsiNmProviderService extends AbstractProviderService {
 
     /**
      * Make sure that links point to the local repository.
+     * @param attachments the list of referenced files to update
      * @param doc the HTML document
      * @param tag the HTML tag to process
      * @param attr the attribute of the HTML tag to process
-     * @return the list remote attachments, representing the referenced files
      */
-    protected List<RemoteAttachment> convertReferencedLinks(Document doc, String tag, String attr) {
-        List<RemoteAttachment> attachments = new ArrayList<>();
+    protected void convertReferencedLinks(List<RemoteAttachment> attachments, Document doc, String tag, String attr) {
 
         Elements elms = doc.select(tag + "[" + attr + "]");
         for (Element e : elms) {
@@ -340,10 +359,12 @@ public class DkMsiNmProviderService extends AbstractProviderService {
                     // Re-write the link to point to the absolute URL
                     e.attr(attr, ratt.getRemoteFileUrl());
                 }
+
+                attachments.add(ratt);
+
             } catch (IOException ex) {
                 log.error("Failed processing HTML description");
             }
         }
-        return attachments;
     }
 }

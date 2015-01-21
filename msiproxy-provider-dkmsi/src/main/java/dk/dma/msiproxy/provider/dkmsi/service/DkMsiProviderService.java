@@ -147,6 +147,10 @@ public class DkMsiProviderService extends AbstractProviderService {
         return LANGUAGES;
     }
 
+    /***************************************/
+    /** Life cycle methods                **/
+    /***************************************/
+
     /**
      * Called at start up.
      */
@@ -159,6 +163,10 @@ public class DkMsiProviderService extends AbstractProviderService {
         loadMessages();
     }
 
+    /***************************************/
+    /** Scheduling methods                **/
+    /***************************************/
+
     /**
      * Called every 5 minutes to update message list
      */
@@ -166,6 +174,18 @@ public class DkMsiProviderService extends AbstractProviderService {
     protected void loadMessagesPeriodically() {
         loadMessages();
     }
+
+    /**
+     * Called every hour to clean up the message repo folder
+     */
+    @Schedule(persistent=false, second="30", minute="27", hour="*/1", dayOfWeek="*", year="*")
+    protected void cleanUpMessageRepoFolderPeriodically() {
+        cleanUpMessageRepoFolder();
+    }
+
+    /***************************************/
+    /** Message loading                   **/
+    /***************************************/
 
     /**
      * {@inheritDoc}
