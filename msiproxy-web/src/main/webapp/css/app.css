@@ -206,6 +206,12 @@ h3 {
 
 .msi-map-tooltip {
     font-size: 10px;
+    line-height: 12px;
+}
+
+.msi-map-tooltip div p {
+    margin: 0;
+    padding: 0;
 }
 
 .layer-switcher {

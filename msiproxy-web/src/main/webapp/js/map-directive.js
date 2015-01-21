@@ -169,17 +169,27 @@ angular.module('msiproxy.app')
                             msiLayer, {
                                 hover: true,
                                 onBeforeSelect: function(feature) {
+                                    if (feature.popup) {
+                                        return;
+                                    }
+
+                                    var b = feature.geometry.getBounds();
+
                                     // add code to create tooltip/popup
-                                    feature.popup = new OpenLayers.Popup.FramedCloud(
-                                        "",
-                                        feature.geometry.getBounds().getCenterLonLat(),
-                                        new OpenLayers.Size(100,100),
+                                    feature.popup = new OpenLayers.Popup.Anchored(
+                                        "tooltip",
+                                        new OpenLayers.LonLat(b.left, b.bottom),
+                                        new OpenLayers.Size(300,50),
                                         formatTooltip(feature),
-                                        null,
+                                        {'size': new OpenLayers.Size(0,0), 'offset': new OpenLayers.Pixel(170, 12)},
                                         false,
                                         null);
 
-                                    feature.popup.maxSize = new OpenLayers.Size(200,300);
+                                    feature.popup.backgroundColor = '#eeeeee';
+                                    feature.popup.calculateRelativePosition = function () {
+                                        return 'bl';
+                                    };
+
 
                                     map.addPopup(feature.popup);
                                     return true;
