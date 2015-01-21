@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
  */
 public class RemoteMsiNmAttachment implements RemoteAttachment {
 
-    public static final Pattern MSINM_REPO_FILE_PATTERN = Pattern.compile("^/?rest/repo/file/messages/\\d+/\\d+/(?<id>\\d+)/(?<file>.+)$");
-    public static final Pattern MSINM_ATTACHMENT_FILE_PATTERN = Pattern.compile("^/?messages/\\d+/\\d+/(?<id>\\d+)/(?<file>.+)$");
+    public static final Pattern MSINM_REPO_FILE_PATTERN = Pattern.compile("^/?rest/repo/file/messages/\\w+/\\w+/(?<id>\\d+)/(?<file>.+)$");
+    public static final Pattern MSINM_ATTACHMENT_FILE_PATTERN = Pattern.compile("^/?messages/\\w+/\\w+/(?<id>\\d+)/(?<file>.+)$");
     public static final String MSINM_REPO_FILE_PATH = "/rest/repo/file/";
 
     Path localFileRepoPath;
