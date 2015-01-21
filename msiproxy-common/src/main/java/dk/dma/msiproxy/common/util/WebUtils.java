@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 /**
@@ -135,6 +136,33 @@ public class WebUtils {
         return response;
     }
 
+
+    /**
+     * Returns a non-exception casting version of URLEncode.encode() in UTF-8
+     * @param s the string to encode
+     * @return the encoded string
+     */
+    public static String encode(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return s;
+        }
+    }
+
+    /**
+     * Returns a non-exception casting version of URLEncode.decode() in UTF-8
+     * @param s the string to decode
+     * @return the decoded string
+     */
+    public static String decode(String s) {
+        try {
+            return URLDecoder.decode(s, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return s;
+        }
+    }
+
     /**
      * Encode identically to the javascript encodeURIComponent() method
      * @param s the string to encode
@@ -169,5 +197,20 @@ public class WebUtils {
                     .replaceAll("\\%2F", "/")
                     .replaceAll("\\%3B", ";")
                     .replaceAll("\\%3F", "?");
+    }
+
+    /**
+     * Decode identically to the javascript decodeURIComponent() method
+     * @param s the string to encode
+     * @return the encoded string
+     */
+    public static String decodeURIComponent(String s) {
+        String result;
+        try {
+            result = URLDecoder.decode(s.replace("+", "%2B"), "UTF-8").replace("%2B", "+");
+        } catch (UnsupportedEncodingException e) {
+            result = s;
+        }
+        return result;
     }
 }

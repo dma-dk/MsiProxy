@@ -150,7 +150,7 @@ public class ThumbnailService {
 
             return thumbFile;
 
-        } catch (IOException e) {
+        } catch (Throwable e) {
             // Alas, no thumbnail
             return null;
         }

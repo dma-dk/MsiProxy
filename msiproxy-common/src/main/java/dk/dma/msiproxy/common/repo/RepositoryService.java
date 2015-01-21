@@ -259,7 +259,7 @@ public class RepositoryService {
 
         if (Files.notExists(f) || Files.isDirectory(f)) {
             log.warn("Failed streaming file: " + f);
-            throw new WebApplicationException(404);
+            return Response.status(404).build();
         }
 
         // Check if we can generate a thumbnail for image files
@@ -303,18 +303,18 @@ public class RepositoryService {
 
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, filter)) {
                 stream.forEach(f -> {
-                            Attachment vo = new Attachment();
-                            vo.setName(f.getFileName().toString());
-                            vo.setPath(WebUtils.encodeURI(path + "/" + f.getFileName().toString()));
-                            vo.setDirectory(Files.isDirectory(f));
-                            try {
-                                vo.setUpdated(new Date(Files.getLastModifiedTime(f).toMillis()));
-                                vo.setSize(Files.size(f));
-                            } catch (Exception e) {
-                                log.trace("Error reading file attribute for " + f);
-                            }
-                            result.add(vo);
-                        });
+                    Attachment vo = new Attachment();
+                    vo.setName(f.getFileName().toString());
+                    vo.setPath(WebUtils.encodeURI(path + "/" + f.getFileName().toString()));
+                    vo.setDirectory(Files.isDirectory(f));
+                    try {
+                        vo.setUpdated(new Date(Files.getLastModifiedTime(f).toMillis()));
+                        vo.setSize(Files.size(f));
+                    } catch (Exception e) {
+                        log.trace("Error reading file attribute for " + f);
+                    }
+                    result.add(vo);
+                });
             }
         }
         return result;

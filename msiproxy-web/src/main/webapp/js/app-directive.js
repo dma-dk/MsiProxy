@@ -145,6 +145,30 @@ angular.module('msiproxy.app')
                     true);
             }
         };
+    }])
+
+    /********************************
+     * Renders a list of attachments
+     ********************************/
+    .directive('msiAttachment', [function () {
+        return {
+            restrict: 'E',
+            templateUrl: '/partials/attachment.html',
+            replace: true,
+            scope: {
+                file: "=",
+                size: "@",
+                clickable: "@"
+            },
+            link: function(scope, element, attrs) {
+                scope.thumbnailUrl = "/rest/repo/thumb/" + scope.file.path + "?size=" + scope.size;
+                scope.fileUrl = "/rest/repo/file/" + scope.file.path;
+                scope.imageClass = "attachment-image size-" + scope.size;
+            }
+        };
     }]);
+
+
+
 
 

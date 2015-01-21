@@ -3,11 +3,17 @@ package dk.dma.msiproxy.provider.dkmsinm.service;
 import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.MessageCache;
 import dk.dma.msiproxy.common.provider.Providers;
+import dk.dma.msiproxy.common.repo.RemoteAttachment;
+import dk.dma.msiproxy.common.repo.RemoteAttachmentLoader;
 import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.JsonUtils;
 import dk.dma.msiproxy.model.msi.Attachment;
 import dk.dma.msiproxy.model.msi.Message;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
@@ -17,10 +23,15 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -50,6 +61,9 @@ public class DkMsiNmProviderService extends AbstractProviderService {
 
     @Inject
     RepositoryService repositoryService;
+
+    @Inject
+    RemoteAttachmentLoader remoteAttachmentLoader;
 
     /**
      * {@inheritDoc}
@@ -141,7 +155,11 @@ public class DkMsiNmProviderService extends AbstractProviderService {
                     return messages;
                 }
 
-                setActiveMessages(searchResult.getMessages());
+                // Start synchronizing the attachments
+                List<Message> messages = searchResult.getMessages();
+                messages = loadRemoteMsiNmAttachments(messages);
+
+                setActiveMessages(messages);
                 log.info(String.format("Loaded %d MSI-NM messages in %s ms", messages.size(), System.currentTimeMillis() - t0));
             }
 
@@ -202,4 +220,130 @@ public class DkMsiNmProviderService extends AbstractProviderService {
         return true;
     }
 
+    /***********************************************/
+    /** Remote attachment handling                **/
+    /***********************************************/
+
+    /**
+     * Loads the remote MSI-NM attachments to the local repo, if they do not already exist.
+     * <p>
+     * There are two types of files:
+     * <ul>
+     *     <li>Attachments: Attachments part of the JSON message model fetched in the REST call for active messages.</li>
+     *     <li>Referenced files: The message HTML description field may contain images or links. If the referenced file
+     *                           is a message attachment, fetch it.</li>
+     * </ul>
+     *
+     * If the files are copied to the local repo, the process entails re-writing the attachment path
+     * and HTML description records to point to the attachment copy in the local repo.
+     *
+     * @param messages the list of messages to load attachments for
+     * @return the updated messages
+     */
+    public List<Message> loadRemoteMsiNmAttachments(List<Message> messages) {
+
+        long t0 = System.currentTimeMillis();
+
+        // First, process all the attachments fetched from the MSI-NM server
+        Map<Path, RemoteAttachment> attachments = new HashMap<>();
+        messages.stream()
+                .filter(msg -> msg.getAttachments() != null && msg.getAttachments().size() > 0)
+                .flatMap(msg -> convertMessageAttachments(msg).stream())
+                .filter(ratt -> ratt.isCopyLocal() && !attachments.containsKey(ratt.getLocalFileRepoPath()))
+                .forEach(ratt -> attachments.put(ratt.getLocalFileRepoPath(), ratt));
+
+        // Next, process and rewrite referenced files of the HTML description fields
+        messages.stream()
+                .filter(msg -> msg.getDescs() != null && msg.getDescs().size() > 0)
+                .flatMap(msg -> convertReferencedLinks(msg).stream())
+                .filter(ratt -> ratt.isCopyLocal() && !attachments.containsKey(ratt.getLocalFileRepoPath()))
+                .forEach(ratt -> attachments.put(ratt.getLocalFileRepoPath(), ratt));
+
+        // Start loading the remote attachments to the local repo asynchronously
+        remoteAttachmentLoader.loadRemoteAttachments(attachments.values());
+
+        log.info("Synchronized attachments in " + (System.currentTimeMillis() - t0) + " ms");
+        return messages;
+    }
+
+    /**
+     * Process the attachments of a message and returns a list of corresponding remote attachments
+     * @param msg the message to process the attachments for
+     * @return the list of corresponding remote attachments
+     */
+    private List<RemoteAttachment> convertMessageAttachments(Message msg) {
+        List<RemoteAttachment> attachments = new ArrayList<>();
+
+        msg.getAttachments().forEach(att -> {
+            try {
+                // Create a remote attachment value object from the attachment
+                RemoteAttachment ratt = RemoteMsiNmAttachment.fromAttachment(this, serverUrl, att);
+
+                // Check if we should re-write the attachment path to point to the local repo
+                if (ratt.getLocalFileRepoUri() != null) {
+                    att.setPath(ratt.getLocalFileRepoUri());
+                }
+
+                attachments.add(ratt);
+            } catch (IOException e) {
+                log.error("Failed processing attachment for message " + msg.getId() + ": " + att.getPath());
+            }
+        });
+        return attachments;
+    }
+
+    /**
+     * Utility method that will process the HTML description field and convert images and links to
+     * point to the local repository.
+     * @param msg the message whose HTML description field to process for referenced files
+     * @return the processed HTML
+     */
+    private List<RemoteAttachment> convertReferencedLinks(Message msg) {
+        List<RemoteAttachment> attachments = new ArrayList<>();
+
+        msg.getDescs().forEach(desc -> {
+            try {
+                // Process files referenced by <a> "href" attributes and <img> "src" attributes
+                Document doc = Jsoup.parse(desc.getDescription(), serverUrl);
+                attachments.addAll(convertReferencedLinks(doc, "a", "href"));
+                attachments.addAll(convertReferencedLinks(doc, "img", "src"));
+                desc.setDescription(doc.toString());
+            } catch (Exception ex) {
+                log.warn("Failed parsing message description for message " + msg.getId());
+            }
+        });
+        return attachments;
+    }
+
+    /**
+     * Make sure that links point to the local repository.
+     * @param doc the HTML document
+     * @param tag the HTML tag to process
+     * @param attr the attribute of the HTML tag to process
+     * @return the list remote attachments, representing the referenced files
+     */
+    protected List<RemoteAttachment> convertReferencedLinks(Document doc, String tag, String attr) {
+        List<RemoteAttachment> attachments = new ArrayList<>();
+
+        Elements elms = doc.select(tag + "[" + attr + "]");
+        for (Element e : elms) {
+
+            try {
+                // Create a remote attachment value object from the link
+                RemoteAttachment ratt = RemoteMsiNmAttachment.fromReferencedFile(this, serverUrl, e.attr(attr));
+
+                // Check if it should be copied to the local repo
+                if (ratt.getLocalFileRepoUri() != null) {
+                    // Re-write the link to point to the local repo
+                    e.attr(attr, ratt.getLocalFileRepoUri());
+                } else {
+                    // Re-write the link to point to the absolute URL
+                    e.attr(attr, ratt.getRemoteFileUrl());
+                }
+            } catch (IOException ex) {
+                log.error("Failed processing HTML description");
+            }
+        }
+        return attachments;
+    }
 }
