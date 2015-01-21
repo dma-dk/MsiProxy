@@ -10,6 +10,8 @@
 
     <title><fmt:message key="title"/></title>
     <link rel="icon" href="/img/favicon.ico" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon"/>
+    <link rel="icon" href="/img/msi_152.png" sizes="152x152" type="image/png" />
+    <link rel="apple-touch-icon" href="/img/msi_152.png" sizes="152x152" type="image/png" />
 
     <style type="text/css" media="all">
 
@@ -81,6 +83,26 @@
 
         .field-value ol {
             padding-left: 0;
+        }
+
+        .attachment {
+            display: inline-block;
+            margin: 4px;
+            vertical-align: top;
+            text-align: center;
+            position: relative;
+        }
+
+        .attachment-image {
+            display: inline-block;
+            vertical-align: middle;
+            width: 64px;
+        }
+
+        .attachment-label {
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: 10px;
         }
 
     </style>
@@ -178,6 +200,27 @@
                             <td class="field-name"><fmt:message key="field_details"/></td>
                             <td class="field-value">
                                 ${msg.descs[0].description}
+                            </td>
+                        </tr>
+                    </c:if>
+
+                    <!-- Attachments line -->
+                    <c:if test="${not empty msg.attachments}">
+                        <tr>
+                            <td class="field-name"><fmt:message key="field_attachments"/></td>
+                            <td class="field-value">
+                                <c:forEach var="file" items="${msg.attachments}" varStatus="status">
+                                    <span class="attachment">
+                                            <div class="attachment-image">
+                                                <a href="${baseUri}/rest/repo/file/${file.path}" target="_blank">
+                                                    <img src="/rest/repo/thumb/${file.path}?size=64">
+                                                </a>
+                                            </div>
+                                            <div class="attachment-label">
+                                                ${file.name}
+                                            </div>
+                                    </span>
+                                </c:forEach>
                             </td>
                         </tr>
                     </c:if>
