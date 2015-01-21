@@ -7,12 +7,24 @@ import dk.dma.msiproxy.model.msi.Message;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.infinispan.Cache;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -22,6 +34,10 @@ public abstract class AbstractProviderService {
 
     public static String MESSAGE_REPO_ROOT_FOLDER = "messages";
 
+    public static final Pattern MESSAGE_ATTACHMENT_FILE_PATTERN = Pattern.compile("^/?messages/\\w+/\\w+/\\w+/(?<id>\\d+)/(?<file>.+)$");
+    public static final Pattern MESSAGE_REPO_FILE_PATTERN = Pattern.compile("^/?rest/repo/file/messages/\\w+/\\w+/\\w+/(?<id>\\d+)/(?<file>.+)$");
+
+    protected Logger log = LoggerFactory.getLogger(AbstractProviderService.class);
     protected List<Message> messages = new CopyOnWriteArrayList<>();
     protected long fetchTime = -1L;
 
@@ -225,6 +241,137 @@ public abstract class AbstractProviderService {
     public String getMessageFileRepoUri(Integer id, String name) throws IOException {
         Path file = getMessageRepoFolder(id).resolve(name);
         return getRepositoryService().getRepoUri(file);
+    }
+
+    /***************************************/
+    /** Repo clean-up methods             **/
+    /***************************************/
+
+    /**
+     * May be called periodically to clean up the message repo folder associated
+     * with the provider.
+     * <p>
+     * The procedure will determine which repository message ID's are still active.
+     * and delete folders associated with messages ID's that are not active anymore.
+     */
+    public void cleanUpMessageRepoFolder() {
+
+        long t0 = System.currentTimeMillis();
+
+        // Compute the ID's for message repository folders to keep
+        Set<Integer> ids = computeReferencedMessageIds(messages);
+
+        // Build a lookup map of all the paths that ara still active
+        Set<Path> paths = new HashSet<>();
+        ids.forEach(id -> {
+            try {
+                Path path = getMessageRepoFolder(id);
+                // Add the path and the hashed sub-folders above it
+                paths.add(path);
+                paths.add(path.getParent());
+                paths.add(path.getParent().getParent());
+            } catch (IOException e) {
+                log.error("Failed computing " + getProviderId() + "  message repo paths for id " + id + ": " + e.getMessage());
+            }
+        });
+
+        // Scan all sub-folders and delete those
+        Path messageRepoRoot = getRepositoryService().getRepoRoot()
+                .resolve(MESSAGE_REPO_ROOT_FOLDER)
+                .resolve(getProviderId());
+        paths.add(messageRepoRoot);
+
+        try {
+            Files.walkFileTree(messageRepoRoot, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if (!paths.contains(dir)) {
+                        log.info("Deleting message repo directory :" + dir);
+                        Files.delete(dir);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (!paths.contains(file.getParent())) {
+                        log.info("Deleting message repo file      :" + file);
+                        Files.delete(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            log.error("Failed cleaning up " + getProviderId() + " message repo: " + e.getMessage());
+        }
+
+        log.info(String.format("Cleaned up %s message repo in %d ms",
+                getProviderId(),
+                System.currentTimeMillis() - t0));
+    }
+
+    /**
+     * The procedure will determine which repository message ID's are still active.
+     * <p>
+     * In addition to the actual ID's of active message, look at the attachments and
+     * referenced files in message HTML description fields, since these may reference
+     * attachments for non-active messages.
+     *
+     * @param messages the list of active messages
+     * @return the ID's for message repository folders to keep
+     */
+    private Set<Integer> computeReferencedMessageIds(List<Message> messages) {
+        Set<Integer> ids = new HashSet<>();
+
+        // First, add the ID of the message
+        messages.forEach(msg -> ids.add(msg.getId()));
+
+        // Add all message ID's referenced by message attachments
+        messages.stream()
+                .filter(msg -> msg.getAttachments() != null && msg.getAttachments().size() > 0)
+                .flatMap(msg -> msg.getAttachments().stream())
+                .forEach(att -> {
+                    Matcher m = MESSAGE_ATTACHMENT_FILE_PATTERN.matcher(att.getPath());
+                    if (m.matches()) {
+                        ids.add(Integer.valueOf(m.group("id")));
+                    }
+                });
+
+        // Add all message ID's referenced by message HTML description fields
+        messages.stream()
+                .filter(msg -> msg.getDescs() != null && msg.getDescs().size() > 0)
+                .flatMap(msg -> msg.getDescs().stream())
+                .filter(desc -> StringUtils.isNotBlank(desc.getDescription()))
+                .forEach(desc -> {
+                    try {
+                        // Process files referenced by <a> "href" attributes and <img> "src" attributes
+                        Document doc = Jsoup.parse(desc.getDescription());
+                        computeReferencedMessageIds(ids, doc, "a", "href");
+                        computeReferencedMessageIds(ids, doc, "img", "src");
+                    } catch (Exception ex) {
+                    }
+                });
+
+        return ids;
+    }
+
+
+    /**
+     * If the given element attribute references a message repo folder, add the message ID to the ids list.
+     * @param ids the message ID list
+     * @param doc the HTML document
+     * @param tag the HTML tag to process
+     * @param attr the attribute of the HTML tag to process
+     */
+    private void computeReferencedMessageIds(Set<Integer> ids, Document doc, String tag, String attr) {
+        doc.select(String.format("%s[%s]", tag, attr)).stream()
+                .filter(e -> e.attr(tag) != null)
+                .forEach(e -> {
+                    Matcher m = MESSAGE_REPO_FILE_PATTERN.matcher(e.attr(attr));
+                    if (m.matches()) {
+                        ids.add(Integer.valueOf(m.group("id")));
+                    }
+                });
     }
 
 }
