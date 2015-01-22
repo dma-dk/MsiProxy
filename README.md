@@ -115,3 +115,30 @@ Build and deploy the MSI-Proxy web application using:
     mvn wildfly:deploy -Dwildfly.hostname=<<REMOTE SERVER>> -Dwildfly.port=9990 \
         -Dwildfly.username=<<USER NAME> -Dwildfly.password=<<PASSWORD>>
 
+### Misc
+
+#### OSM Static Map
+The MSI-Proxy use an [OSM static map service](http://sourceforge.net/p/staticmaplite/code/HEAD/tree/staticmap.php) for generating the map grid images.
+
+By default, the service used is [http://osm.e-navigation.net/staticmap.php](http://osm.e-navigation.net/staticmap.php).
+
+You can override the "mapImageServer" system property to designate an alternative static map server,
+such as [http://staticmap.openstreetmap.de/staticmap.php](http://staticmap.openstreetmap.de/staticmap.php).
+
+#### Apache Web Server
+In order to provide HTTPS access, it is common to run the Apache Web Server in front of Wildfly.
+If mod_proxy is used to proxy requests to the Wildfly server, there is a problem in that Wildfly will see the originating request as a HTTP request, and thus, re-directs will fail.
+However, this can be fixed by adding an "originalScheme" header with the value "https", i.e.:
+
+    Header add originalScheme "https"
+    RequestHeader set originalScheme "https"
+
+Thus, the virtual host may look something along the lines of:
+
+    <VirtualHost *:443>
+        ServerName msi-proxy.e-navigation.net
+        Include sites-available/msinm-demo-common.conf
+        ProxyPreserveHost On
+        ProxyPass           /  http://localhost:8080/
+        ProxyPassReverse    /  http://localhost:8080/
+    </VirtualHost>
