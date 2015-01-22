@@ -242,6 +242,9 @@ public class ThumbnailService {
                 thumbImage.flush();
             }
 
+            // Update the timestamp of the thumbnail file to match the change date of the image file
+            Files.setLastModifiedTime(thumbFile, Files.getLastModifiedTime(file));
+
         } catch (Exception e) {
             log.error("Error creating thumbnail for image " + file, e);
             throw new IOException(e);
