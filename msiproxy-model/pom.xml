@@ -13,4 +13,14 @@
     <packaging>jar</packaging>
     <name>Standalone MSI-NM model</name>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
 </project>

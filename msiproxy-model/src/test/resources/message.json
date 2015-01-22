@@ -1,0 +1,66 @@
+{
+  "seriesIdentifier":{
+    "mainType":"MSI",
+    "authority":"DK",
+    "year":2015,
+    "shortId":"DK-?-15",
+    "fullId":"MSI-DK-?-15"
+  },
+  "type":"COASTAL_WARNING",
+  "status":"PUBLISHED",
+  "area":{
+    "descs":[
+      {"lang":"da","name":"Østersøen"},
+      {"lang":"en","name":"Baltic"}
+    ],
+    "parent":{
+      "descs":[
+        {"lang":"da","name":"Danmark"},
+        {"lang":"en","name":"Denmark"}
+      ],
+      "id":1
+    },
+    "id":1002
+  },
+  "categories":[
+    {
+      "descs":[
+        {"lang":"da","name":"Molefyret"},
+        {"lang":"en","name":"The mole head light"}
+      ],
+      "parent":{
+        "descs":[
+          {"lang":"da","name":"Fyr"},
+          {"lang":"en","name":"Light"}
+        ],
+        "id":1
+      },
+      "id":1005
+    }
+  ],
+  "validFrom":1420821660000,
+  "locations":[
+    {
+      "type":"POINT",
+      "points":[{"lat":54.753,"lon":10.6696666666667}]
+    }
+  ],
+  "descs":[
+    {
+      "lang":"da",
+      "title":"Light unlit",
+      "description":"Molefyret på pos. 54 45,2 N - 010 40,2 E er slukket.",
+      "vicinity":"Bagenkop Havn"
+    },
+    {
+      "lang":"en",
+      "title":"Light unlit",
+      "description":"The mole head light in pos. 54 45,2 N - 010 40,2 E is unlit.",
+      "vicinity":"Bagenkop Harbour"}
+  ],
+  "provider":"dkmsi",
+  "id":13987,
+  "created":1420822360000,
+  "updated":1421047065000,
+  "version":2
+}

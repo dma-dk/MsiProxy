@@ -15,8 +15,8 @@
     <dependencies>
        <dependency>
          <groupId>dk.dma.msiproxy</groupId>
-	 <artifactId>msiproxy-model</artifactId>
-	 <version>1.0-SNAPSHOT</version>
+         <artifactId>msiproxy-model</artifactId>
+         <version>1.0-SNAPSHOT</version>
        </dependency>
 
         <dependency>
