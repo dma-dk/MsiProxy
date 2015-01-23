@@ -298,7 +298,7 @@ public class MapImageProducer {
             double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(lat1),
                     Math.cos(d/R)-Math.sin(lat1)*Math.sin(lat2));
 
-            polygon.getPoints().add(new Point(Math.toDegrees(lat2), Math.toDegrees(lon2)));
+            polygon.checkCreatePoints().add(new Point(Math.toDegrees(lat2), Math.toDegrees(lon2)));
         }
         return polygon;
     }

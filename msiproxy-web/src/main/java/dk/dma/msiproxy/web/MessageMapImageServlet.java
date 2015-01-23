@@ -148,7 +148,7 @@ public class MessageMapImageServlet extends HttpServlet {
      */
     public List<Location> getMessageLocations(Message message) {
         List<Location> result = new ArrayList<>();
-        if (message != null) {
+        if (message != null && message.getLocations() != null) {
             result.addAll(message.getLocations()
                     .stream()
                     .filter(location -> location.getPoints().size() > 0)
