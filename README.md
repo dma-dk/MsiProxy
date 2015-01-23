@@ -41,6 +41,16 @@ The page can e.g. be used in an iframe. It is more sophisticated than the simple
 
 Example: [http://localhost:8080/index.html#/dkmsi/da/details](http://localhost:8080/index.html#/dkmsi/da/details)
 
+### Dispatch Page ###
+There is a special dispatching HTML page, that will redirect the browser to one of the pages mentioned above, depending on the browser version. If the browser is
+an Internet Exporer version 8 or earlier, the page will redirect to */details.html*. Otherwise, the page will redirect to */index.html*.
+
+The URI scheme is identical to the Single Page Application scheme, i.e.:
+
+    /dispatch.html#/<<PROVIDER>>/<<LANG>>/<<VIEWMODE>>
+
+Example: [http://localhost:8080/dispatch.html#/dkmsi/da/details](http://localhost:8080/dispatch.html#/dkmsi/da/details)
+
 ### REST API ###
 
 Each MSI provider exposes a REST API that may be used to fetch JSON or XML data for the list of active MSI messages.
