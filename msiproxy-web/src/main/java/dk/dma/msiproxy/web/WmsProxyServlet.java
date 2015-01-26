@@ -17,6 +17,7 @@ package dk.dma.msiproxy.web;
 
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.WebUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 import javax.imageio.ImageIO;
@@ -52,19 +53,19 @@ public class WmsProxyServlet extends HttpServlet {
     Logger log;
 
     @Inject
-    @Setting(value = "wmsProvider", defaultValue = "http://kortforsyningen.kms.dk/")
+    @Setting(value = "wmsProvider", defaultValue = "")
     String wmsProvider;
 
     @Inject
-    @Setting(value = "wmsServiceName", defaultValue = "soe_enc")
+    @Setting(value = "wmsServiceName", defaultValue = "")
     String wmsServiceName;
 
     @Inject
-    @Setting(value = "wmsLogin", defaultValue = "StatSofart")
+    @Setting(value = "wmsLogin", defaultValue = "")
     String wmsLogin;
 
     @Inject
-    @Setting(value = "wmsPassword", defaultValue = "114karls")
+    @Setting(value = "wmsPassword", defaultValue = "")
     String wmsPassword;
 
     /**
@@ -77,6 +78,13 @@ public class WmsProxyServlet extends HttpServlet {
 
         // Cache for a day
         WebUtils.cache(response, CACHE_TIMEOUT);
+
+        // Check that the WMS provider has been defined using system properties
+        if (StringUtils.isBlank(wmsServiceName) || StringUtils.isBlank(wmsProvider) ||
+                StringUtils.isBlank(wmsLogin) || StringUtils.isBlank(wmsPassword)) {
+            response.sendRedirect(BLANK_IMAGE);
+            return;
+        }
 
         @SuppressWarnings("unchecked")
         Map<String, String[]> paramMap = (Map<String, String[]>)request.getParameterMap();
