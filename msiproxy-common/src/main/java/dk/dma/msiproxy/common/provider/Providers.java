@@ -26,12 +26,13 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.naming.NamingException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * A service that maintains a list of all registered MSI providers
@@ -72,7 +73,7 @@ public class Providers {
     public Message getMessage(String providerId, Integer messageId) {
         try {
             return instantiateProvider(providerId).getMessage(messageId);
-        } catch (NamingException e) {
+        } catch (Exception e) {
             log.warn("Error instantiating provider " + providerId);
         }
         return null;
@@ -87,7 +88,7 @@ public class Providers {
     public List<Message> getActiveMessages(String providerId) {
         try {
             return instantiateProvider(providerId).getActiveMessages();
-        } catch (NamingException e) {
+        } catch (Exception e) {
             log.warn("Error instantiating provider " + providerId);
         }
         return null;
@@ -103,7 +104,7 @@ public class Providers {
     public List<Message> getCachedMessages(String providerId, MessageFilter filter) {
         try {
             return instantiateProvider(providerId).getCachedMessages(filter);
-        } catch (NamingException e) {
+        } catch (Exception e) {
             log.warn("Error instantiating provider " + providerId);
         }
         return null;
@@ -117,10 +118,25 @@ public class Providers {
     public AbstractProviderService getProvider(String providerId) {
         try {
             return instantiateProvider(providerId);
-        } catch (NamingException e) {
+        } catch (Exception e) {
             log.warn("Error instantiating provider " + providerId);
         }
         return null;
+    }
+
+    /**
+     * Returns the provider service beans for the given colon-separated provider ID's.
+     * If an invalid provider ID is included, the provider service is excluded from the result.
+     *
+     * @param providerIds the colon-separated provider ID's
+     * @return the instantiated provider service beans
+     */
+    public List<AbstractProviderService> getProviders(String providerIds) {
+        return Arrays.asList(providerIds.split(":"))
+                .stream()
+                .map(this::getProvider)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -129,7 +145,7 @@ public class Providers {
      * @param providerId the provider ID
      * @return the instantiated provider service
      */
-    private AbstractProviderService instantiateProvider(String providerId) throws NamingException {
+    private AbstractProviderService instantiateProvider(String providerId) throws Exception {
         Class<? extends AbstractProviderService> clazz;
         if (providerId == null) {
             clazz = providers.entrySet().stream()

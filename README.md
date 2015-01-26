@@ -18,7 +18,8 @@ A simple server-side generated HTML page is available at the URI:
 
     /details.html?provider=<<PROVIDER>>&lang=<<LANG>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm", and *lang* is one of the supported languages, i.e. "da" or "en".
+Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+and *lang* is one of the supported languages, i.e. "da" or "en".
 
 The page can e.g. be used in an iframe, and since it is fairly simple and completely generated on the server side, it should be backwards compatible with most browsers.
 
@@ -34,7 +35,8 @@ A more sophisticated AngularJS based single page application is available at the
 
     /index.html#/<<PROVIDER>>/<<LANG>>/<<VIEWMODE>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm", and *lang* is one of the supported languages, i.e. "da" or "en".
+Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+and *lang* is one of the supported languages, i.e. "da" or "en".
 *View mode* is one of "details", "grid" or "map", and defines how the messages are displayed.
 
 The page can e.g. be used in an iframe. It is more sophisticated than the simple HTML page previously described, but may not work properly in old web browsers.
@@ -58,7 +60,8 @@ The REST API has the URI format:
 
     /rest/<<PROVIDER>>/<<VERSION>>/service/messages?<<PARAMETERS>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm", and *version* is the API version, currently "v1".
+Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+and *version* is the API version, currently "v1".
 The *parameters* are described below:
 
 | Parameter  | Default | Description  |

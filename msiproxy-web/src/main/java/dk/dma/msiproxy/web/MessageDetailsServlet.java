@@ -81,34 +81,28 @@ public class MessageDetailsServlet extends HttpServlet {
         String lang = request.getParameter("lang");
         String messageId = request.getParameter("messageId");
 
-        AbstractProviderService providerService = providers.getProvider(providerId);
-        if (providerService == null) {
+        List<AbstractProviderService> providerServices = providers.getProviders(providerId);
+
+        if (providerServices.size() == 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid 'provider' parameter");
             return;
         }
 
-        // Ensure that the language is supported
-        lang = providerService.getLanguage(lang);
-        final Locale locale = new Locale(lang);
-
         // Force the encoding and the locale based on the lang parameter
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        final Locale locale = new Locale(lang);
         request = new HttpServletRequestWrapper(request) {
             @Override public Locale getLocale() { return locale; }
         };
 
         // Get the messages in the given language for the requested provider
         MessageFilter filter = new MessageFilter().lang(lang);
-        List<Message> messages = providerService.getCachedMessages(filter);
-
-        // If a specific message is requested, filter on this
-        if (StringUtils.isNumeric(messageId)) {
-            Integer id = Integer.valueOf(messageId);
-            messages = messages.stream()
-                    .filter(msg -> id.equals(msg.getId()))
-                    .collect(Collectors.toList());
-        }
+        Integer id = StringUtils.isNumeric(messageId) ? Integer.valueOf(messageId) : null;
+        List<Message> messages = providerServices.stream()
+                .flatMap(p -> p.getCachedMessages(filter).stream())
+                .filter(msg -> (id == null || id.equals(msg.getId())))
+                .collect(Collectors.toList());
 
         // Register the attributes to be used on the JSP apeg
         request.setAttribute("messages", messages);
