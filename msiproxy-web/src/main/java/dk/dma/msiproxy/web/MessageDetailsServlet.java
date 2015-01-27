@@ -21,6 +21,7 @@ import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.Providers;
 import dk.dma.msiproxy.common.util.WebUtils;
 import dk.dma.msiproxy.model.MessageFilter;
+import dk.dma.msiproxy.model.msi.Area;
 import dk.dma.msiproxy.model.msi.Message;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -42,8 +43,11 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -76,10 +80,12 @@ public class MessageDetailsServlet extends HttpServlet {
         // Never cache the response
         response = WebUtils.nocache(response);
 
-        // Read the provider and language parameters
+        // Read the request parameters
         String providerId = request.getParameter("provider");
         String lang = request.getParameter("lang");
         String messageId = request.getParameter("messageId");
+        String activeNow = request.getParameter("activeNow");
+        String areaHeadingIds = request.getParameter("areaHeadings");
 
         List<AbstractProviderService> providerServices = providers.getProviders(providerId);
 
@@ -87,6 +93,9 @@ public class MessageDetailsServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid 'provider' parameter");
             return;
         }
+
+        // Ensure that the language is valid
+        lang = providerServices.get(0).getLanguage(lang);
 
         // Force the encoding and the locale based on the lang parameter
         request.setCharacterEncoding("UTF-8");
@@ -98,10 +107,19 @@ public class MessageDetailsServlet extends HttpServlet {
 
         // Get the messages in the given language for the requested provider
         MessageFilter filter = new MessageFilter().lang(lang);
+        Date now = "true".equals(activeNow) ? new Date() : null;
         Integer id = StringUtils.isNumeric(messageId) ? Integer.valueOf(messageId) : null;
+        Set<Integer> areaHeadings = StringUtils.isNotBlank(areaHeadingIds)
+                ? Arrays.asList(areaHeadingIds.split(",")).stream().map(Integer::valueOf).collect(Collectors.toSet()) : null;
+
         List<Message> messages = providerServices.stream()
                 .flatMap(p -> p.getCachedMessages(filter).stream())
+                // Filter on message id
                 .filter(msg -> (id == null || id.equals(msg.getId())))
+                // Filter on active messages
+                .filter(msg -> (now == null || msg.getValidFrom() == null || msg.getValidFrom().before(now)))
+                // Filter on area headings
+                .filter(msg -> (areaHeadings == null || areaHeadings.contains(getAreaHeadingId(msg))))
                 .collect(Collectors.toList());
 
         // Register the attributes to be used on the JSP apeg
@@ -116,6 +134,16 @@ public class MessageDetailsServlet extends HttpServlet {
         } else {
             generateHtmlPage(request, response);
         }
+    }
+
+    /**
+     * Returns the area heading ID of the given message, or null if none exists
+     * @param msg the message
+     * @return the area heading ID of the given message
+     */
+    public Integer getAreaHeadingId(Message msg) {
+        Area area = TldFunctions.getAreaHeading(msg);
+        return (area != null) ? area.getId() : null;
     }
 
     /**

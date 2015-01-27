@@ -6,10 +6,16 @@ angular.module('msiproxy.app')
         function ($scope, $rootScope, $routeParams, $location, $window, $modal, MsiProxyService, LangService) {
             'use strict';
 
+            $scope.allMessages = [];
             $scope.messages = [];
             $scope.provider = $routeParams.provider;
             $scope.lang = $routeParams.lang;
             $scope.viewMode = 'details';
+
+            // Filtering support
+            $scope.showFilter = false;
+            $scope.areaHeadings = [];
+            $scope.filterNow = { filtered: true };
 
             /**
              * Called to initialize the controller with view mode.
@@ -25,13 +31,98 @@ angular.module('msiproxy.app')
                 MsiProxyService.messages(
                     $scope.provider,
                     $scope.lang,
-                    function(data) {
-                        $scope.messages = data;
-                    },
+                    $scope.updateMessages,
                     function () {
                         console.error("Error fetching messages");
                     }
                 )
+            };
+
+            /**
+             * Called when the list of messages has been updated
+             * @param messages the new list of messages
+             */
+            $scope.updateMessages = function (messages) {
+                $scope.allMessages = messages;
+
+                // Reset the filter
+                $scope.resetFilter();
+
+                // Hook up watchers on filter controls
+                $scope.$watch(
+                    function() { return $scope.areaHeadings },
+                    function(data) { $scope.updateFilter(); },
+                    true);
+                $scope.$watch(
+                    function() { return $scope.filterNow },
+                    function(data) { $scope.updateFilter(); },
+                    true);
+            };
+
+            /**
+             * Resets the message filter
+             */
+            $scope.resetFilter = function () {
+                $scope.messages = $scope.allMessages;
+                $scope.filterNow.filtered = false;
+                $scope.areaHeadings = [];
+
+                // Get hold of the area headings
+                // Every time the two root-most areas of a message in the messages list changes,
+                // the message will be stamped with an "areaHeading" attribute, so that, in effect,
+                // the areaHeading attribute serves as a grouping of the messages.
+                for (var m in $scope.allMessages) {
+                    if ($scope.allMessages[m].areaHeading) {
+                        $scope.areaHeadings.push($scope.allMessages[m].areaHeading);
+                        $scope.allMessages[m].areaHeading.filtered = false;
+                    }
+                }
+            };
+
+            /**
+             * Updates the filtered list of message based on the current filter state
+             */
+            $scope.updateFilter = function () {
+                $scope.messages = [];
+
+                // Compute the area headings that should be filtered by
+                var areas = [];
+                for (var a in $scope.areaHeadings) {
+                    if ($scope.areaHeadings[a].filtered) {
+                        areas.push($scope.areaHeadings[a]);
+                    }
+                }
+
+                // Special case: If no area heading is selected, filter by all area headings
+                if (areas.length == 0) {
+                    areas = $scope.areaHeadings;
+                }
+
+                // Filter the list of messages by their area heading and date
+                var includeAreaMessages = false;
+                for (var m in $scope.allMessages) {
+                    var msg = $scope.allMessages[m];
+                    if (msg.areaHeading) {
+                        includeAreaMessages = $.inArray(msg.areaHeading, areas) != -1;
+                    }
+                    var includeActive = !$scope.filterNow.filtered || msg.validFrom < new Date();
+                    if (includeAreaMessages && includeActive) {
+                        $scope.messages.push(msg);
+                    }
+                }
+            };
+
+            /**
+             * Toggle-display the filter bar
+             */
+            $scope.toggleFilter = function () {
+                if ($scope.showFilter) {
+                    $('.filter-bar').fadeOut(200);
+                } else {
+                    $('.filter-bar').fadeIn(200);
+                }
+                $scope.showFilter = !$scope.showFilter;
+                $scope.resetFilter();
             };
 
             /**
@@ -46,7 +137,21 @@ angular.module('msiproxy.app')
              * Export a PDF of the message list
              */
             $scope.pdf = function () {
-                $window.open('/details.pdf?provider=' + $scope.provider + '&lang=' + $scope.lang, '_blank');
+                var params = 'provider=' + $scope.provider + '&lang=' + $scope.lang;
+                if ($scope.showFilter) {
+                    params += '&activeNow=' + $scope.filterNow.filtered;
+                    var areas = '';
+                    for (var a in $scope.areaHeadings) {
+                        if ($scope.areaHeadings[a].filtered) {
+                            if (areas.length > 0) {
+                                areas += ',';
+                            }
+                            areas += $scope.areaHeadings[a].id;
+                        }
+                    }
+                    params += '&areaHeadings=' + areas;
+                }
+                $window.open('/details.pdf?' + params, '_blank');
             };
 
             /**

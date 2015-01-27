@@ -13,6 +13,7 @@ angular.module('msiproxy.app')
             'MENU_GRID' : 'Gallery',
             'MENU_MAP' : 'Map',
             'MENU_PDF' : 'PDF',
+            'MENU_FILTER' : 'Filter',
             'BTN_CLOSE' : 'Close',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Time',
@@ -24,7 +25,8 @@ angular.module('msiproxy.app')
             'FIELD_PUBLICATION' : 'Publication',
             'REF_REPETITION' : '(repetition)',
             'REF_CANCELLED' : '(cancelled)',
-            'REF_UPDATED' : '(updated)'
+            'REF_UPDATED' : '(updated)',
+            'ACTIVE_NOW' : 'Active Now'
         });
 
         $translateProvider.translations('da', {
@@ -34,6 +36,7 @@ angular.module('msiproxy.app')
             'MENU_GRID' : 'Galleri',
             'MENU_MAP' : 'Kort',
             'MENU_PDF' : 'PDF',
+            'MENU_FILTER' : 'Filter',
             'BTN_CLOSE' : 'Luk',
             'FIELD_REFERENCE' : 'Reference',
             'FIELD_TIME' : 'Tid',
@@ -45,7 +48,8 @@ angular.module('msiproxy.app')
             'FIELD_PUBLICATION' : 'Publikation',
             'REF_REPETITION' : '(gentagelse)',
             'REF_CANCELLED' : '(udgår)',
-            'REF_UPDATED' : '(ajourført)'
+            'REF_UPDATED' : '(ajourført)',
+            'ACTIVE_NOW' : 'Aktive nu'
         });
 
         $translateProvider.preferredLanguage('en');

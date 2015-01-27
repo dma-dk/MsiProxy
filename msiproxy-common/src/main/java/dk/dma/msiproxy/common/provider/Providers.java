@@ -137,6 +137,8 @@ public class Providers {
 
         if ("all".equalsIgnoreCase(providerIds)) {
             return getProviders(providers.keySet().stream().collect(Collectors.joining(":")));
+        } else if (providerIds == null) {
+            return Arrays.asList(getProvider(null));
         }
 
         return Arrays.asList(providerIds.split(":"))

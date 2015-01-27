@@ -1,21 +1,43 @@
 
-<div class="row-fluid view-mode-bar visible-on-map mouse-on">
+<div class="row-fluid view-mode-bar visible-on-map">
     <div class="input-group col-xs-12 col-sm-8 col-md-6 col-lg-6 center">
-            <span class="view-mode-bar-btn" ng-click="go('details')" ng-class="{true:'active'}[viewMode == 'details']">
-                <span class="glyphicon glyphicon-th-list"></span>
-                <span class="view-mode-bar-txt" translate>MENU_DETAILS</span>
-            </span>
-            <span class="view-mode-bar-btn" ng-click="go('grid')" ng-class="{true:'active'}[viewMode == 'grid']">
-                <span class="glyphicon glyphicon-th"></span>
-                <span class="view-mode-bar-txt" translate>MENU_GRID</span>
-            </span>
-            <span class="view-mode-bar-btn" ng-click="go('map')" ng-class="{true:'active'}[viewMode == 'map']">
-                <span class="glyphicon glyphicon-globe"></span>
-                <span class="view-mode-bar-txt" translate>MENU_MAP</span>
-            </span>
-            <span class="view-mode-bar-btn" ng-click="pdf()">
-                <span class="glyphicon glyphicon-print"></span>
-                <span class="view-mode-bar-txt" translate>MENU_PDF</span>
-            </span>
+        <span class="view-mode-bar-btn" ng-click="go('details')" ng-class="{true:'active'}[viewMode == 'details']">
+            <span class="glyphicon glyphicon-th-list"></span>
+            <span class="view-mode-bar-txt" translate>MENU_DETAILS</span>
+        </span>
+        <span class="view-mode-bar-btn" ng-click="go('grid')" ng-class="{true:'active'}[viewMode == 'grid']">
+            <span class="glyphicon glyphicon-th"></span>
+            <span class="view-mode-bar-txt" translate>MENU_GRID</span>
+        </span>
+        <span class="view-mode-bar-btn" ng-click="go('map')" ng-class="{true:'active'}[viewMode == 'map']">
+            <span class="glyphicon glyphicon-globe"></span>
+            <span class="view-mode-bar-txt" translate>MENU_MAP</span>
+        </span>
+        <span class="view-mode-bar-btn" ng-click="toggleFilter()" ng-class="{true:'active'}[showFilter]">
+            <span class="glyphicon glyphicon-filter"></span>
+            <span class="view-mode-bar-txt" translate>MENU_FILTER</span>
+        </span>
+        <span class="view-mode-bar-btn" ng-click="pdf()">
+            <span class="glyphicon glyphicon-print"></span>
+            <span class="view-mode-bar-txt" translate>MENU_PDF</span>
+        </span>
     </div>
 </div>
+
+<div class="row-fluid filter-bar visible-on-map">
+    <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12 center filter-bar-btns">
+        <button type="button" class="btn btn-primary btn-xs filter-bar-btn"
+                ng-model="filterNow.filtered"
+                btn-checkbox
+                translate>
+            ACTIVE_NOW
+        </button>
+        <button type="button" class="btn btn-success btn-xs filter-bar-btn"
+                ng-repeat="area in areaHeadings"
+                ng-model="area.filtered"
+                btn-checkbox>
+            {{area.descs[0].name}}
+        </button>
+    </div>
+</div>
+

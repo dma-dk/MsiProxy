@@ -38,14 +38,6 @@ h3 {
     margin-right: auto;
 }
 
-.mouse-off {
-    pointer-events: none;
-}
-
-.mouse-on {
-    pointer-events: auto;
-}
-
 /** Disable modal dialog animation **/
 
 .modal.fade {
@@ -55,6 +47,12 @@ h3 {
     -webkit-transform: translate(0, 0);
     -ms-transform: translate(0, 0);
     transform: translate(0, 0);
+}
+
+/** Disable button focus **/
+
+.btn:focus,.btn:active {
+    outline: none !important;
 }
 
 .borderless {
@@ -320,6 +318,8 @@ h3 {
     line-height: 128px;
 }
 
+/** View-mode Bar classes **/
+
 .view-mode-bar {
     height: 40px;
     line-height: 40px;
@@ -354,4 +354,32 @@ h3 {
     .view-mode-bar-txt {
         display: inherit;
     }
+}
+
+/** Filter Bar classes **/
+
+.filter-bar {
+    display: none;
+    color: #444444;
+    background-color: lightgray;
+    text-align: center;
+    vertical-align: middle;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(lightgray), to(#aaaaaa));
+    background: -webkit-linear-gradient(top, lightgray, #aaaaaa);
+    background: -moz-linear-gradient(top, lightgray, #aaaaaa);
+    background: -ms-linear-gradient(top, lightgray, #aaaaaa);
+}
+
+@media print {
+    .filter-bar { display: none; }
+}
+
+.filter-bar-btns {
+    padding: 5px 0 10px 0;
+}
+
+.filter-bar-btn {
+    margin-top: 5px;
+    margin-right: 5px;
+    font-size: 10px;
 }
