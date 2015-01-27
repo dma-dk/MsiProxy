@@ -127,11 +127,18 @@ public class Providers {
     /**
      * Returns the provider service beans for the given colon-separated provider ID's.
      * If an invalid provider ID is included, the provider service is excluded from the result.
+     * <p>
+     * The special "all" provider ID means that all providers are used
      *
      * @param providerIds the colon-separated provider ID's
      * @return the instantiated provider service beans
      */
     public List<AbstractProviderService> getProviders(String providerIds) {
+
+        if ("all".equalsIgnoreCase(providerIds)) {
+            return getProviders(providers.keySet().stream().collect(Collectors.joining(":")));
+        }
+
         return Arrays.asList(providerIds.split(":"))
                 .stream()
                 .map(this::getProvider)
