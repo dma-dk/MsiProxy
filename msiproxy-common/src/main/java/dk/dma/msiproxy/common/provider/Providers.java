@@ -16,8 +16,6 @@
 package dk.dma.msiproxy.common.provider;
 
 import dk.dma.msiproxy.common.util.CdiHelper;
-import dk.dma.msiproxy.model.MessageFilter;
-import dk.dma.msiproxy.model.msi.Message;
 import org.slf4j.Logger;
 
 import javax.ejb.Lock;
@@ -61,53 +59,6 @@ public class Providers {
         providers.put(providerService.getProviderId(),
                 new ProviderContext(providerService.getPriority(), providerService.getClass()));
         log.info("Registered MSI provider " + providerService.getProviderId());
-    }
-
-    /**
-     * Returns the message with the given ID from the given provider
-     *
-     * @param providerId the provider ID
-     * @param messageId  the message ID
-     * @return the message, or null if not found
-     */
-    public Message getMessage(String providerId, Integer messageId) {
-        try {
-            return instantiateProvider(providerId).getMessage(messageId);
-        } catch (Exception e) {
-            log.warn("Error instantiating provider " + providerId);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the list of active messages from the given provider
-     *
-     * @param providerId the provider ID
-     * @return the messages, or null if not found
-     */
-    public List<Message> getActiveMessages(String providerId) {
-        try {
-            return instantiateProvider(providerId).getActiveMessages();
-        } catch (Exception e) {
-            log.warn("Error instantiating provider " + providerId);
-        }
-        return null;
-    }
-
-    /**
-     * Returns a filtered view of the message list from the given provider
-     *
-     * @param providerId the provider ID
-     * @param filter the data filter
-     * @return the messages
-     */
-    public List<Message> getCachedMessages(String providerId, MessageFilter filter) {
-        try {
-            return instantiateProvider(providerId).getCachedMessages(filter);
-        } catch (Exception e) {
-            log.warn("Error instantiating provider " + providerId);
-        }
-        return null;
     }
 
     /**

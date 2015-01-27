@@ -34,7 +34,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Request;
@@ -161,7 +160,7 @@ public class RepositoryService {
         byte[] bytes = target.getBytes("utf-8");
 
         // MD5 hash the ID
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
@@ -263,7 +262,7 @@ public class RepositoryService {
         }
 
         // Check if we can generate a thumbnail for image files
-        String thumbUri = null;
+        String thumbUri;
         Path thumbFile = thumbnailService.getThumbnail(f, iconSize);
         if (thumbFile != null) {
             thumbUri = app.getBaseUri() + getRepoUri(thumbFile);

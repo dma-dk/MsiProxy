@@ -37,7 +37,7 @@ public class ActiveMessage {
 
     /**
      * Construct the active message from a DB row
-     * @param row
+     * @param row the database row
      */
     public ActiveMessage(Object[] row) {
         type = (String)row[0];

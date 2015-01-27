@@ -86,10 +86,8 @@ public class TimeUtils {
      * @return if the two Dates is for the same date
      */
     public static boolean sameDate(Date date1, Date date2) {
-        if (date1 == null || date2 == null) {
-            return false;
-        }
-        return resetTime(date1).getTime() == resetTime(date2).getTime();
+        return !(date1 == null || date2 == null)
+                && resetTime(date1).getTime() == resetTime(date2).getTime();
     }
 
     /**
@@ -99,9 +97,7 @@ public class TimeUtils {
      * @return if the two Dates is for the same date, hour and minute
      */
     public static boolean sameDateHourMinute(Date date1, Date date2) {
-        if (date1 == null || date2 == null) {
-            return false;
-        }
-        return resetSeconds(date1).getTime() == resetSeconds(date2).getTime();
+        return !(date1 == null || date2 == null)
+                && resetSeconds(date1).getTime() == resetSeconds(date2).getTime();
     }
 }

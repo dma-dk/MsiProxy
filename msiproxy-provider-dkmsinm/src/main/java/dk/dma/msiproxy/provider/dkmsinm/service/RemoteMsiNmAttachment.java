@@ -62,7 +62,7 @@ public class RemoteMsiNmAttachment implements RemoteAttachment {
         Matcher m = MSINM_ATTACHMENT_FILE_PATTERN.matcher(att.getPath());
         if (m.matches()) {
             Integer messageId = Integer.valueOf(m.group("id"));
-            String file = m.group("file");
+            //String file = m.group("file");
 
             // Compute the target local repo attachment path, URI and the full URL of the remote attachment
             ratt.localFileRepoPath = providerService.getMessageFileRepoPath(messageId, att.getName());

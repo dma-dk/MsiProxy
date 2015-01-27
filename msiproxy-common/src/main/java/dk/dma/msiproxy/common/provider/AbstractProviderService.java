@@ -364,6 +364,7 @@ public abstract class AbstractProviderService {
                         computeReferencedMessageIds(ids, doc, "a", "href");
                         computeReferencedMessageIds(ids, doc, "img", "src");
                     } catch (Exception ex) {
+                        log.trace("Failed computing referenced messages " + ex.getMessage());
                     }
                 });
 

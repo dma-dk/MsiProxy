@@ -169,8 +169,6 @@ public class PositionFormatter {
         int minutes = (int)Math.floor(fraction * 60.0);
         int seconds = (int)Math.floor(fraction * 3600.0 - minutes * 60.0);
 
-
-        StringBuilder result = new StringBuilder();
         Part p;
         while ((p = findPart(format, "DEG")) != null) {
             format = p.floor

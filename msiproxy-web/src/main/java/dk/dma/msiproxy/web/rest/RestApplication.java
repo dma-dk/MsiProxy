@@ -18,6 +18,9 @@ package dk.dma.msiproxy.web.rest;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+/**
+ * Defines the root path for the REST interface of MSI-Proxy
+ */
 @ApplicationPath("/rest")
 public class RestApplication extends Application {
 

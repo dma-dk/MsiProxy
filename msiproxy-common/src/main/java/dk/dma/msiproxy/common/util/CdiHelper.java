@@ -44,7 +44,7 @@ public class CdiHelper {
      * @param clazz The class of the object to inject upon
      * @param injectionObject the object to inject upon
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes", "unchecked", "unused" })
     public static <T> void programmaticInjection(Class clazz, T injectionObject) throws NamingException {
         InitialContext initialContext = new InitialContext();
         Object lookup = initialContext.lookup("java:comp/BeanManager");

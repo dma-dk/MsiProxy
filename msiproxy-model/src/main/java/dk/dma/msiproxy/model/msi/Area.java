@@ -24,8 +24,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -68,17 +66,6 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
     }
 
     /**
-     * Returns or creates the list of child areas
-     * @return the list of child areas
-     */
-    public List<Area> checkCreateChildren() {
-        if (children == null) {
-            children = new ArrayList<>();
-        }
-        return children;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -95,16 +82,6 @@ public class Area extends LocalizedEntity<Area.AreaDesc> implements Comparable<A
     @Override
     public int compareTo(Area area) {
         return (area == null || sortOrder == area.getSortOrder()) ? 0 : (sortOrder < area.getSortOrder() ? -1 : 1);
-    }
-
-    /**
-     * Recursively sorts the children
-     */
-    public void sortChildren() {
-        if (children != null) {
-            Collections.sort(children);
-            children.forEach(Area::sortChildren);
-        }
     }
 
     @XmlAttribute

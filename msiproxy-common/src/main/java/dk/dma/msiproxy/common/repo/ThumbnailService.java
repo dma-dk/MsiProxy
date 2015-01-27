@@ -247,9 +247,10 @@ public class ThumbnailService {
                 g2d.dispose();
 
                 // Save the thumbnail
+                String fileName = thumbFile.getFileName().toString();
                 ImageIO.write(
                         thumbImage,
-                        FilenameUtils.getExtension(thumbFile.getFileName().toString()),
+                        FilenameUtils.getExtension(fileName),
                         thumbFile.toFile());
 
                 // Releas resources
