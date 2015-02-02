@@ -13,7 +13,6 @@ angular.module('msiproxy.app')
             $scope.viewMode = 'details';
 
             // Filtering support
-            $scope.showFilter = false;
             $scope.areaHeadings = [];
             $scope.filterNow = { filtered: true };
 
@@ -113,19 +112,6 @@ angular.module('msiproxy.app')
             };
 
             /**
-             * Toggle-display the filter bar
-             */
-            $scope.toggleFilter = function () {
-                if ($scope.showFilter) {
-                    $('.filter-bar').fadeOut(200);
-                } else {
-                    $('.filter-bar').fadeIn(200);
-                }
-                $scope.showFilter = !$scope.showFilter;
-                $scope.resetFilter();
-            };
-
-            /**
              * Change the view mode of the message list
              * @param viewMode the new view mode
              */
@@ -138,19 +124,17 @@ angular.module('msiproxy.app')
              */
             $scope.pdf = function () {
                 var params = 'provider=' + $scope.provider + '&lang=' + $scope.lang;
-                if ($scope.showFilter) {
-                    params += '&activeNow=' + $scope.filterNow.filtered;
-                    var areas = '';
-                    for (var a in $scope.areaHeadings) {
-                        if ($scope.areaHeadings[a].filtered) {
-                            if (areas.length > 0) {
-                                areas += ',';
-                            }
-                            areas += $scope.areaHeadings[a].id;
+                params += '&activeNow=' + $scope.filterNow.filtered;
+                var areas = '';
+                for (var a in $scope.areaHeadings) {
+                    if ($scope.areaHeadings[a].filtered) {
+                        if (areas.length > 0) {
+                            areas += ',';
                         }
+                        areas += $scope.areaHeadings[a].id;
                     }
-                    params += '&areaHeadings=' + areas;
                 }
+                params += '&areaHeadings=' + areas;
                 $window.open('/details.pdf?' + params, '_blank');
             };
 
