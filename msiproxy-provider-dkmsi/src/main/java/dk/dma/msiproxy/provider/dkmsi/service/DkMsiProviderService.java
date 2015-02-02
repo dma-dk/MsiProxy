@@ -392,15 +392,23 @@ public class DkMsiProviderService extends AbstractProviderService {
         message.setStatus(Status.PUBLISHED);
 
         // Message Desc
-        if (StringUtils.isNotBlank(title) || StringUtils.isNotBlank(descriptionEn) || StringUtils.isNotBlank(area3En)) {
+        String titleDa = title;
+        String titleEn = null;
+        if (title != null && title.indexOf('/') != -1) {
+            // By convention, the "enctext" field is the Danish title.
+            // However, if it contains a "/" character, it is the "Danish / English" title
+            titleDa = title.substring(0, title.indexOf('/')).trim();
+            titleEn = title.substring(title.indexOf('/') + 1).trim();
+        }
+        if (StringUtils.isNotBlank(titleEn) || StringUtils.isNotBlank(descriptionEn) || StringUtils.isNotBlank(area3En)) {
             Message.MessageDesc descEn = message.checkCreateDesc("en");
-            descEn.setTitle(StringUtils.defaultString(title, descriptionEn));
+            descEn.setTitle(titleEn);
             descEn.setDescription(TextUtils.txt2html(descriptionEn));
             descEn.setVicinity(area3En);
         }
-        if (StringUtils.isNotBlank(title) || StringUtils.isNotBlank(descriptionDa) || StringUtils.isNotBlank(area3Da)) {
+        if (StringUtils.isNotBlank(titleDa) || StringUtils.isNotBlank(descriptionDa) || StringUtils.isNotBlank(area3Da)) {
             Message.MessageDesc descDa = message.checkCreateDesc("da");
-            descDa.setTitle(StringUtils.defaultString(title, descriptionDa));
+            descDa.setTitle(titleDa);
             descDa.setDescription(TextUtils.txt2html(descriptionDa));
             descDa.setVicinity(area3Da);
         }
