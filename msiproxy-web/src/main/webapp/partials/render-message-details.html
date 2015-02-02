@@ -45,7 +45,11 @@
     <div class="row" ng-if="msg.locations">
         <div class="col-sm-1 msi-details-item-field" translate>FIELD_LOCATION</div>
         <div class="col-sm-11 msi-details-item-value">
-            <div ng-repeat="loc in msg.locations">
+            <div>
+                <a href ng-if="msg.showLocations" ng-click="msg.showLocations = false" translate>HIDE_POS</a>
+                <a href ng-if="!msg.showLocations" ng-click="msg.showLocations = true" translate>SHOW_POS</a>
+            </div>
+            <div ng-repeat="loc in msg.locations" ng-show="msg.showLocations">
                 <div ng-if="loc.descs[0].description">{{loc.descs[0].description}}</div>
                 <div ng-repeat="pt in loc.points">
                     {{pt | lonlat}}<span ng-if="pt.descs[0].description">, {{pt.descs[0].description}}</span>

@@ -25,7 +25,9 @@ angular.module('msiproxy.app')
             'REF_REPETITION' : '(repetition)',
             'REF_CANCELLED' : '(cancelled)',
             'REF_UPDATED' : '(updated)',
-            'ACTIVE_NOW' : 'Active Now'
+            'ACTIVE_NOW' : 'Active Now',
+            'SHOW_POS' : 'Show positions',
+            'HIDE_POS' : 'Hide positions'
         });
 
         $translateProvider.translations('da', {
@@ -47,7 +49,9 @@ angular.module('msiproxy.app')
             'REF_REPETITION' : '(gentagelse)',
             'REF_CANCELLED' : '(udgår)',
             'REF_UPDATED' : '(ajourført)',
-            'ACTIVE_NOW' : 'Aktive nu'
+            'ACTIVE_NOW' : 'Aktive nu',
+            'SHOW_POS' : 'Vis positioner',
+            'HIDE_POS' : 'Skjul positioner'
         });
 
         $translateProvider.preferredLanguage('en');
