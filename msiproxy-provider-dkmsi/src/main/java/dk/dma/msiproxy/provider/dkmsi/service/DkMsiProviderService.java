@@ -723,7 +723,7 @@ public class DkMsiProviderService extends AbstractProviderService {
         String desc = StringUtils.defaultString(msg.getDesc(lang).getDescription());
 
         if (StringUtils.isNotBlank(subtitle)) {
-            desc += String.format("<p><strong>%s</strong></p>", subtitle);
+            desc += String.format("<p><i>%s</i></p>", subtitle);
         }
         if (StringUtils.isNotBlank(description)) {
             desc += String.format("<p>%s</p>", description);

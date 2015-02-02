@@ -109,7 +109,7 @@ h3 {
 }
 
 .msi-details-item-field {
-    font-style: italic;
+    font-weight: bold;
     color: gray;
     padding-top: 5px;
 }

@@ -69,7 +69,8 @@
         .field-name {
             white-space: nowrap;
             vertical-align: top;
-            font-style: italic;
+            font-weight: bold;
+            color: gray;
             padding-right: 10px;
             text-align: right;
             font-size:11px;
