@@ -134,8 +134,8 @@
                 </c:if>
                 <div>
                     <strong>
-                        <c:if test="${not empty msg.seriesIdentifier.number}">${msg.seriesIdentifier.fullId}: </c:if>
                         ${msi:messageTitleLine(msg, areaHeading)}
+                        <c:if test="${not empty msg.seriesIdentifier.number}">&nbsp;(${msg.seriesIdentifier.shortId})</c:if>
                     </strong>
                 </div>
 

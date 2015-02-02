@@ -8,8 +8,10 @@
     <!-- Title line -->
     <div ng-if="msg.originalInformation">&#10029;</div>
     <div msi-message-details message="msg" messages="messages" disabled="format == 'details'">
-        <strong msi-message-id="msg"></strong>
         <strong msi-message-title="msg" exclude-area-heading="excludeAreaHeading"></strong>
+        <span ng-if="msg.seriesIdentifier.number">
+            &nbsp;(<strong>{{msg.seriesIdentifier.shortId}}</strong>)
+        </span>
         <span ng-if="msg.descs[0].lang != language" style="color: darkgray;">
             ( <img ng-src="/img/flags/{{msg.descs[0].lang}}.png" style="height: 12px; opacity: 0.5;"/> )
         </span>

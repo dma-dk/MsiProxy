@@ -138,9 +138,10 @@ angular.module('msiproxy.app')
                      */
                     function formatTooltip(feature) {
                         var msg = feature.data.msi;
+                        var serId = (msg.seriesIdentifier.number) ? ' (' + msg.seriesIdentifier.shortId + ')' : '';
                         var desc =
                             '<div class="msi-map-tooltip">' +
-                              '<div>' + LangService.messageTitleLine(msg) + '</div>' +
+                              '<div>' + LangService.messageTitleLine(msg) + serId + '</div>' +
                               '<div><small>' + LangService.messageTime(msg) + '</small></div>' +
                             '</div>';
                         return desc;
