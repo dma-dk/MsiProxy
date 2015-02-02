@@ -10,8 +10,6 @@ var app = angular.module('msiproxy.app', [ 'ngRoute', 'ngSanitize', 'ui.bootstra
 
         $routeProvider.when('/:provider/:lang/details', {
             templateUrl: 'partials/message-details.html'
-        }).when('/:provider/:lang/grid', {
-            templateUrl: 'partials/message-grid.html'
         }).when('/:provider/:lang/map', {
             templateUrl: 'partials/message-map.html'
         }).otherwise({

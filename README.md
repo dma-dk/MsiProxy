@@ -37,7 +37,7 @@ A more sophisticated AngularJS based single page application is available at the
 
 Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
 and *lang* is one of the supported languages, i.e. "da" or "en".
-*View mode* is one of "details", "grid" or "map", and defines how the messages are displayed.
+*View mode* is either "details" or "map", and defines how the messages are displayed.
 
 The page can e.g. be used in an iframe. It is more sophisticated than the simple HTML page previously described, but may not work properly in old web browsers.
 
