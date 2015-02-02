@@ -3,8 +3,8 @@
     'MSI'               AS type,
     m.id                AS id,
     m.dateTimeUpdated   AS updated,
-    m.validFrom         AS validFrom,
-    m.validTo           AS validTo,
+    m.validFrom         AS valid_from,
+    m.validTo           AS valid_to,
     a.sortOrder         AS area_sort_order,
     m.sortOrder         AS msg_sort_order
   FROM
@@ -44,7 +44,7 @@ UNION
     LEFT JOIN country c      ON ma.countryId = c.id
   WHERE
     date(fp.t_from) >= CURRENT_DATE
-    AND date(fp.t_from) <= CURRENT_DATE + 1
+    AND date(fp.t_from) <= CURRENT_DATE + :days
     AND fp.t_to > CURRENT_TIMESTAMP
 )
-ORDER BY area_sort_order, msg_sort_order
+ORDER BY area_sort_order, msg_sort_order, valid_from, id

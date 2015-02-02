@@ -70,7 +70,7 @@ public class ActiveMessage {
      * @param msg the message to compare this message to
      * @return if the message is unchanged
      */
-    public boolean isUnchanged(Message msg) {
+    public boolean isUnchanged(ActiveMessage msg) {
         if (isMsi()) {
             // Compare legacy MSI
             return Objects.equals(id, msg.getId()) &&
@@ -79,8 +79,8 @@ public class ActiveMessage {
             // Compare legacy Firing Exercises
             // Sadly, legacy Firing Exercises do not have a change date
             return Objects.equals(id, msg.getId()) &&
-                    Objects.equals(TimeUtils.resetSeconds(validFrom), msg.getValidFrom()) &&
-                    Objects.equals(TimeUtils.resetSeconds(validTo), msg.getValidTo());
+                    Objects.equals(validFrom, msg.getValidFrom()) &&
+                    Objects.equals(validTo, msg.getValidTo());
         }
     }
 

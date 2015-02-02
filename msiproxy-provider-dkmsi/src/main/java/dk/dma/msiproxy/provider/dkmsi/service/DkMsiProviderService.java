@@ -20,6 +20,7 @@ import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.MessageCache;
 import dk.dma.msiproxy.common.provider.Providers;
 import dk.dma.msiproxy.common.repo.RepositoryService;
+import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.common.util.TimeUtils;
 import dk.dma.msiproxy.model.msi.Area;
@@ -52,6 +53,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,24 +106,33 @@ public class DkMsiProviderService extends AbstractProviderService {
     EntityManager em;
 
     @Inject
+    @Setting(value = "firingExercisesDays", defaultValue = "7")
+    long firingExercisesDays;
+
+    @Inject
     @TextResource("/sql/active_msi_and_firing_exercises.sql")
-    private String activeMessagesSql;
+    String activeMessagesSql;
 
     @Inject
     @TextResource("/sql/msi_message_data.sql")
-    private String msiMessageDataSql;
+    String msiMessageDataSql;
 
     @Inject
     @TextResource("/sql/msi_location_data.sql")
-    private String msiLocationDataSql;
+    String msiLocationDataSql;
 
     @Inject
     @TextResource("/sql/firing_exercise_message_data.sql")
-    private String firingExerciseMessageDataSql;
+    String firingExerciseMessageDataSql;
 
     @Inject
     @TextResource("/sql/firing_exercise_location_data.sql")
-    private String firingExerciseLocationDataSql;
+    String firingExerciseLocationDataSql;
+
+    /**
+     * A snapshot of the the active messages last time it was checked
+     */
+    List<ActiveMessage> lastActiveMessages = new CopyOnWriteArrayList<>();
 
     /**
      * {@inheritDoc}
@@ -212,6 +224,8 @@ public class DkMsiProviderService extends AbstractProviderService {
         try {
 
             // Load the list of active legacy MSI and firing exercises
+            // An "ActiveMessage" contains a few attributes of a message,
+            // such as ID, valid from- and to-dates and type.
             List<ActiveMessage> activeMessages = readActiveMessages();
 
             // Check if there are any changes to the current list of messages
@@ -220,12 +234,16 @@ public class DkMsiProviderService extends AbstractProviderService {
                 return messages;
             }
 
+            // Record the snapshot of active messages
+            lastActiveMessages = activeMessages;
+
             // Read the message details from the DB one by one
             List<Message> result = new ArrayList<>();
             activeMessages.forEach(msg -> {
-                Message message = (msg.isMsi()) ? readMsiMessage(msg.getId()) : readFiringExerciseMessage(msg.getId());
-                if (message != null) {
-                    result.add(message);
+                if (msg.isMsi()) {
+                    readMsiMessage(result, msg.getId());
+                } else {
+                    readFiringExerciseMessage(result, msg.getId());
                 }
             });
 
@@ -245,9 +263,11 @@ public class DkMsiProviderService extends AbstractProviderService {
      * @return the list of active legacy MSI and firing exercises
      */
     private List<ActiveMessage> readActiveMessages() {
+        String sql = activeMessagesSql.replace(":days", String.valueOf(firingExercisesDays));
+
         @SuppressWarnings("unchecked")
         List<Object[]> activeMessages = em
-                .createNativeQuery(activeMessagesSql)
+                .createNativeQuery(sql)
                 .getResultList();
 
         return activeMessages.stream()
@@ -256,17 +276,17 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     /**
-     * Checks if the currently list of messages is unchanged from the active messages
+     * Checks if the list of active messages has changed
      *
-     * @param activeMessages the active messages to compare the current list of messages to
-     * @return if the currently list of messages is unchanged from the active messages
+     * @param activeMessages the active messages to compare the last list of active messages
+     * @return if the list of active messages is unchanged
      */
     private boolean isMessageListUnchanged(List<ActiveMessage> activeMessages) {
-        if (activeMessages.size() == messages.size()) {
+        if (activeMessages.size() == lastActiveMessages.size()) {
 
             // Check that the message ids and change dates of the two lists are identical
-            for (int x = 0; x < messages.size(); x++) {
-                Message msg = messages.get(x);
+            for (int x = 0; x < lastActiveMessages.size(); x++) {
+                ActiveMessage msg = lastActiveMessages.get(x);
                 ActiveMessage activeMsg = activeMessages.get(x);
                 if (!activeMsg.isUnchanged(msg)) {
                     return false;
@@ -280,22 +300,21 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     /**
-     * Reads the legacy MSI data for the given message.
+     * Reads the legacy MSI data for the given message and adds it to the message list.
      *
-     * If a message is associated with a location containing multiple points, there will
-     * be one row of per point. Otherwise, there will be only one row for the message.
-     *
+     * @param messages the message list to add the message to
      * @param id the ID of the MSI to read in
      * @return the resulting messages
      */
     @SuppressWarnings("unused")
-    private Message readMsiMessage(Integer id) {
+    private Message readMsiMessage(List<Message> messages, Integer id) {
         // First read the core MSI data
         Message message = readMsiMessageData(id);
 
         // Read the location data
         if (message != null) {
             message = readMsiLocationData(message);
+            messages.add(message);
         }
         return message;
     }
@@ -509,19 +528,70 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     /**
-     * Reads the firing exercises for the given ID
+     * Reads the firing exercises for the given ID and adds it to the list of messages
+     *
+     * @param messages the message list to add the message to
      * @param id the id of the firing exercise to read in
      * @return the firing exercise
      */
-    private Message readFiringExerciseMessage(Integer id) {
+    private Message readFiringExerciseMessage(List<Message> messages, Integer id) {
         // First read the core MSI data
         Message message = readFiringExerciseMessageData(id);
 
         // Read the location data
         if (message != null) {
             message = readFiringExerciseLocationData(message);
+
+            // Check if the firing exercise should be merge with an existing firing exercise
+            message = checkMergeFiringExercise(messages, message);
         }
         return message;
+    }
+
+
+    /**
+     * If a firing exercise exists for the same area as the given firing exercise message,
+     * merge the two.
+     *
+     * @param messages the list of messages to merge with message with
+     * @param message the firing exercise message to merge with the message list
+     * @return the resulting message
+     */
+    private Message checkMergeFiringExercise(List<Message> messages, Message message) {
+        if (message.getArea() != null) {
+            Category cat = getDefaultFiringExerciseCategory();
+
+            // Look for an existing firing exercise with the same area
+            Message firingExercise = messages.stream()
+                    .filter(msg -> msg.getCategories() != null && Objects.equals(msg.getCategories().get(0).getId(), cat.getId()))
+                    .filter(msg -> msg.getArea() != null && Objects.equals(msg.getArea().getId(), message.getArea().getId()))
+                    .findFirst()
+                            .orElse(null);
+
+            if (firingExercise != null) {
+                // Update the dates of the existing firing exercise
+                if (message.getUpdated().after(firingExercise.getUpdated())) {
+                    firingExercise.setUpdated(message.getUpdated());
+                }
+                if (message.getValidFrom().before(firingExercise.getValidFrom())) {
+                    firingExercise.setValidFrom(message.getValidFrom());
+                }
+                if (message.getValidTo() != null && firingExercise.getValidTo() != null && message.getValidTo().after(firingExercise.getValidTo())) {
+                    firingExercise.setValidTo(message.getValidTo());
+                }
+
+                // Append the time to the existing firing exercise
+                firingExercise.getDescs().stream()
+                        .forEach(desc -> desc.setTime(desc.getTime() + "\n" + message.checkCreateDesc(desc.getLang()).getTime()));
+
+                return firingExercise;
+            }
+        }
+
+        // No firing exercise found for the same area - add it to the list
+        messages.add(message);
+
+        return  message;
     }
 
     /**
