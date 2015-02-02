@@ -53,7 +53,7 @@ angular.module('msiproxy.app')
                     };
 
                     var msiLayer  = new OpenLayers.Layer.Vector( "MSI", {
-                        displayInLayerSwitcher: true,
+                        displayInLayerSwitcher: false,
                         styleMap: new OpenLayers.StyleMap({
                             "default": new OpenLayers.Style({
                                 externalGraphic : "${icon}",
