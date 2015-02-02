@@ -2,8 +2,8 @@
  * The main MSI-Proxy controller
  */
 angular.module('msiproxy.app')
-    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', '$modal', 'MsiProxyService', 'LangService',
-        function ($scope, $rootScope, $routeParams, $location, $window, $modal, MsiProxyService, LangService) {
+    .controller('MsiProxyCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$window', '$modal', '$timeout', 'MsiProxyService', 'LangService',
+        function ($scope, $rootScope, $routeParams, $location, $window, $modal, $timeout, MsiProxyService, LangService) {
             'use strict';
 
             $scope.allMessages = [];
@@ -76,6 +76,11 @@ angular.module('msiproxy.app')
                         $scope.allMessages[m].areaHeading.filtered = false;
                     }
                 }
+
+                // Since the height of the filter bar may have changed height,
+                // recompute the top of the message list
+                $timeout(adjustMessageListTopPosition, 100);
+
             };
 
             /**

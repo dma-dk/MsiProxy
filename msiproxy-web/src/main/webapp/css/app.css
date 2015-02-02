@@ -69,6 +69,10 @@ h3 {
     border-bottom: 1px dashed lightgray;
 }
 
+.msi-details {
+    margin: 70px 10px 10px 10px;
+}
+
 .msi-details-image img {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     border: 2px solid #fff;
@@ -122,6 +126,9 @@ h3 {
     padding-left: 0;
 }
 
+.msi-grid {
+    margin-top: 70px;
+}
 
 .msi-grid-item-container {
     margin-bottom: 20px;
@@ -194,7 +201,7 @@ h3 {
     height: 100%;
     position: fixed;
     left: 0;
-    top: 40px;
+    top: 70px;
     background-color: #b5d0d0;
     -moz-user-select: none;
     -khtml-user-select: none;
@@ -263,12 +270,6 @@ h3 {
     z-index: 2000;
 }
 
-.visible-on-map {
-    z-index: 200;
-    display: block;
-    position: relative;
-}
-
 /* Hide OSM link */
 .olControlNoSelect {
     display: none;
@@ -321,8 +322,13 @@ h3 {
 /** View-mode Bar classes **/
 
 .view-mode-bar {
+    top: 0;
+    width: 100%;
     height: 40px;
     line-height: 40px;
+    z-index: 200;
+    position: fixed;
+    display: block;
     color: lightgray;
     background-color: #444444;
     text-align: center;
@@ -359,6 +365,11 @@ h3 {
 /** Filter Bar classes **/
 
 .filter-bar {
+    top: 40px;
+    z-index: 200;
+    position: fixed;
+    display: block;
+    width: 100%;
     color: #444444;
     background-color: lightgray;
     text-align: center;
