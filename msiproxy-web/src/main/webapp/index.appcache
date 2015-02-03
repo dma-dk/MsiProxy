@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# Version 4
+# Version 5
 NETWORK:
 *
 CACHE:
@@ -17,4 +17,36 @@ ext/moment-2.9.0/moment-with-locales.min.js
 ext/openlayers-2.13.1/OpenLayers.js
 
 ext/bootstrap-3.3.1/css/bootstrap.min.css
+ext/bootstrap-3.3.1/css/bootstrap-theme.min.css
+ext/bootstrap-3.3.1/fonts/glyphicons-halflings-regular.woff
 ext/openlayers-2.13.1/style.css
+
+js/util.js
+js/app.js
+js/app-ctrl.js
+js/app-directive.js
+js/app-filter.js
+js/app-service.js
+js/map-directive.js
+js/map-service.js
+js/site-texts.js
+
+css/app.css
+
+partials/attachment.html
+partials/message-details.html
+partials/message-details-dialog.html
+partials/message-map.html
+partials/render-message-details.html
+partials/view-modes.html
+
+img/flags/da.png
+img/flags/en.png
+img/blank.png
+img/favicon.ico
+img/map_image_placeholder.png
+img/msi.png
+img/msi_32.png
+img/nm.png
+img/nm_32.png
+

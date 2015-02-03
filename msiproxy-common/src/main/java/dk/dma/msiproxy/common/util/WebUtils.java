@@ -117,4 +117,15 @@ public class WebUtils {
                     .replaceAll("%3B", ";")
                     .replaceAll("%3F", "?");
     }
+
+
+    /**
+     * Sets the status and headers of the response to indicate that the resource has moved permanently
+     * @param response the HTTP response
+     * @param url the full URL
+     */
+    public static void movedPermanently(HttpServletResponse response, String url) {
+        response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+        response.setHeader("Location", url);
+    }
 }
