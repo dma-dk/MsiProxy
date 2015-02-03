@@ -59,6 +59,11 @@ h3 {
     border: none;
 }
 
+.clickable:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 /**
  * Message details styles
  */

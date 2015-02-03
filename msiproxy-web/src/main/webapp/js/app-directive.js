@@ -21,7 +21,7 @@ angular.module('msiproxy.app')
                 link: function(scope, element, attrs) {
 
                     if (!scope.disabled) {
-                        element.css('cursor', 'pointer');
+                        element.addClass('clickable');
                         element.bind('click', function() {
                             $rootScope.$broadcast('messageDetails', {
                                 message: scope.message,
