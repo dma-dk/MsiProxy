@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# Version 6
+# Version 8
 NETWORK:
 *
 CACHE:
@@ -39,6 +39,7 @@ partials/message-details-dialog.html
 partials/message-map.html
 partials/render-message-details.html
 partials/view-modes.html
+partials/message-map-general-messages.html
 
 img/flags/da.png
 img/flags/en.png

@@ -86,6 +86,11 @@
             padding-left: 0;
         }
 
+        .field-value p:first-child, .field-value p:last-child {
+            margin: 0;
+            padding: 0;
+        }
+
         .attachment {
             display: inline-block;
             margin: 4px;

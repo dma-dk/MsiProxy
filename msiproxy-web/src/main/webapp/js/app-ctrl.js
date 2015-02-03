@@ -6,8 +6,10 @@ angular.module('msiproxy.app')
         function ($scope, $rootScope, $routeParams, $location, $window, $modal, $timeout, MsiProxyService, LangService) {
             'use strict';
 
-            $scope.allMessages = [];
-            $scope.messages = [];
+            $scope.allMessages = [];        // The total list of messages
+            $scope.messages = [];           // The filtered list of messages
+            $scope.generalMessages = [];    // The filtered list of messages without a location
+
             $scope.provider = $routeParams.provider;
             $scope.lang = $routeParams.lang;
             $scope.viewMode = 'details';
@@ -88,6 +90,7 @@ angular.module('msiproxy.app')
              */
             $scope.updateFilter = function () {
                 $scope.messages = [];
+                $scope.generalMessages = [];
 
                 // Compute the area headings that should be filtered by
                 var areas = [];
@@ -112,6 +115,10 @@ angular.module('msiproxy.app')
                     var includeActive = !$scope.filterNow.filtered || msg.validFrom < new Date();
                     if (includeAreaMessages && includeActive) {
                         $scope.messages.push(msg);
+                        // If the message does not have a location, add it as a "general message"
+                        if (!msg.locations || msg.locations.length == 0) {
+                            $scope.generalMessages.push(msg);
+                        }
                     }
                 }
             };

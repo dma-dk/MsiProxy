@@ -1,0 +1,25 @@
+
+<div class="msi-map-general-messages" ng-if="generalMessages.length > 0">
+    <h4 translate>GENERAL_MSGS</h4>
+    <table>
+        <tr ng-repeat="msg in generalMessages">
+            <td style="border: none; padding-bottom: 10px; vertical-align: top">
+                <img ng-src="/img/{{msg.seriesIdentifier.mainType | lowercase}}_32.png"
+                     class="msi-map-general-message-icon"
+                     msi-message-details message="msg" messages="messages"/>
+            </td>
+            <td style="border: none; padding-bottom: 10px;">
+                <div msi-message-details message="msg" messages="messages">
+                    <strong msi-message-title="msg"></strong>
+                            <span ng-if="msg.seriesIdentifier.number">
+                                &nbsp;(<strong>{{msg.seriesIdentifier.shortId}}</strong>)
+                            </span>
+                            <span ng-if="msg.descs[0].lang != language" style="color: darkgray;">
+                                ( <img ng-src="/img/flags/{{msg.descs[0].lang}}.png" style="height: 12px; opacity: 0.5;"/> )
+                            </span>
+                </div>
+                <msi-valid-from-to msg="msg"></msi-valid-from-to>
+            </td>
+        </tr>
+    </table>
+</div>

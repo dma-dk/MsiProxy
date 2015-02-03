@@ -4,7 +4,11 @@
     <!-- View mode menu bar -->
     <div ng-include="'partials/view-modes.html'"></div>
 
-    <div class="msi-map" msi-map messages="messages"></div>
+    <div class="msi-map" msi-map messages="messages">
+
+        <div ng-include="'partials/message-map-general-messages.html'"></div>
+
+    </div>
 
     <div id="msi-layerswitcher" class="layer-switcher"></div>
 
