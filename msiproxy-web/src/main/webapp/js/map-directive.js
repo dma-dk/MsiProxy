@@ -141,7 +141,7 @@ angular.module('msiproxy.app')
                         var serId = (msg.seriesIdentifier.number) ? ' (' + msg.seriesIdentifier.shortId + ')' : '';
                         var desc =
                             '<div class="msi-map-tooltip">' +
-                              '<div>' + LangService.messageTitleLine(msg) + serId + '</div>' +
+                              '<div><strong>' + LangService.messageTitleLine(msg) + serId + '</strong></div>' +
                               '<div><small>' + LangService.messageTime(msg) + '</small></div>' +
                             '</div>';
                         return desc;
@@ -175,13 +175,14 @@ angular.module('msiproxy.app')
                                     }
 
                                     var b = feature.geometry.getBounds();
+                                    var html = formatTooltip(feature);
 
                                     // add code to create tooltip/popup
                                     feature.popup = new OpenLayers.Popup.Anchored(
                                         "tooltip",
                                         new OpenLayers.LonLat(b.left, b.bottom),
-                                        new OpenLayers.Size(300,50),
-                                        formatTooltip(feature),
+                                        new OpenLayers.Size(300, 50 + 18 *  html.occurrences("<br />")),
+                                        html,
                                         {'size': new OpenLayers.Size(0,0), 'offset': new OpenLayers.Pixel(170, 12)},
                                         false,
                                         null);

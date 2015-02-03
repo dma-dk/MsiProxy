@@ -7,6 +7,32 @@ function isIE () {
     return match ? parseInt(match[1]) : undefined;
 }
 
+String.prototype.endsWith = function (s) {
+    return this.length >= s.length && this.substr(this.length - s.length) == s;
+};
+
+String.prototype.contains = function (s) {
+    return this.indexOf(s) > -1;
+};
+
+/**
+ * Function count the occurrences of substring in a string;
+ * @param {String} subString    Required. The string to search for;
+ */
+String.prototype.occurrences = function(subString){
+
+    subString+="";
+    if(subString.length<=0) return this.length+1;
+
+    var n=0, pos=0;
+
+    while(true){
+        pos=this.indexOf(subString,pos);
+        if(pos>=0){ n++; pos+=subString.length; } else break;
+    }
+    return(n);
+};
+
 /**
  * Converts plain text to HTML
  * @param text the plain text to convert
@@ -41,3 +67,4 @@ function formatSeriesIdentifier(msg) {
     }
     return '';
 }
+
