@@ -24,6 +24,7 @@ angular.module('msiproxy.app')
              */
             $scope.init = function (viewMode) {
                 $scope.viewMode = viewMode;
+                $scope.messageId = $routeParams.messageId;
 
                 // Register the current language
                 LangService.changeLanguage($scope.lang);
@@ -37,7 +38,10 @@ angular.module('msiproxy.app')
                         console.error("Error fetching messages");
                     }
                 )
+
             };
+
+
 
             /**
              * Called when the list of messages has been updated
@@ -58,7 +62,21 @@ angular.module('msiproxy.app')
                     function() { return $scope.filterNow },
                     function(data) { $scope.updateFilter(); },
                     true);
+
+                // Check if the details landing page was used
+                if ($scope.messageId) {
+                    for (var m  in messages) {
+                        if (messages[m].id == parseInt($scope.messageId)) {
+                            $scope.$broadcast('messageDetails', {
+                                message: messages[m],
+                                messages: messages
+                            });
+                            return;
+                        }
+                    }
+                }
             };
+
 
             /**
              * Resets the message filter

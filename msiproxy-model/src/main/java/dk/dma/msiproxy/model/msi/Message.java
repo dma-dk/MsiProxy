@@ -39,6 +39,7 @@ import java.util.Set;
 public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     Integer id;
+    Integer messageId;
     Date created;
     Date updated;
     Integer version;
@@ -232,6 +233,15 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    // not distributed via webservice
+    public Integer getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(Integer messageId) {
+        this.messageId = messageId;
     }
 
     @XmlAttribute

@@ -15,6 +15,7 @@
  */
 package dk.dma.msiproxy.provider.dkmsi.service;
 
+import dk.dma.msiproxy.common.MsiProxyApp;
 import dk.dma.msiproxy.common.conf.TextResource;
 import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.MessageCache;
@@ -23,30 +24,29 @@ import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.common.util.TimeUtils;
-import dk.dma.msiproxy.model.msi.Area;
-import dk.dma.msiproxy.model.msi.Category;
-import dk.dma.msiproxy.model.msi.Chart;
-import dk.dma.msiproxy.model.msi.Location;
-import dk.dma.msiproxy.model.msi.LocationType;
-import dk.dma.msiproxy.model.msi.Message;
-import dk.dma.msiproxy.model.msi.Point;
-import dk.dma.msiproxy.model.msi.SeriesIdType;
-import dk.dma.msiproxy.model.msi.SeriesIdentifier;
+import dk.dma.msiproxy.model.msi.*;
 import dk.dma.msiproxy.model.msi.Status;
 import dk.dma.msiproxy.model.msi.Type;
 import dk.dma.msiproxy.provider.dkmsi.conf.DkMsiDB;
+import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterProvider;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
+import twitter4j.GeoLocation;
+import twitter4j.StatusUpdate;
+import twitter4j.TwitterException;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.*;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -88,6 +88,12 @@ public class DkMsiProviderService extends AbstractProviderService {
 
     Pattern CHART_PATTERN_1 = Pattern.compile("(\\d+)");
     Pattern CHART_PATTERN_2 = Pattern.compile("(\\d+) \\(INT (\\d+)\\)");
+
+    @Inject
+    MsiProxyApp msiProxyApp;
+
+    @Inject
+    TwitterProvider twitterProvider;
 
     @Inject
     Logger log;
@@ -188,6 +194,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
         // Load messages
         loadMessages();
+// server needs to be initialized before tweets can be synchronized    }
     }
 
     /***************************************/
@@ -197,10 +204,12 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Called every 5 minutes to update message list
      */
-    @Schedule(persistent = false, second = "38", minute = "*/5", hour = "*", dayOfWeek = "*", year = "*")
-    protected void loadMessagesPeriodically() {
+        // FIXME: production values    @Schedule(persistent = false, second = "38", minute = "*/5", hour = "*", dayOfWeek = "*", year = "*")
+@Schedule(persistent = false, second = "20", minute = "*", hour = "*", dayOfWeek = "*", year = "*")
+        protected void loadMessagesPeriodically() {
         loadMessages();
-    }
+        synchronizeTweets(getActiveMessages());
+}
 
     /**
      * Called every hour to clean up the message repo folder
@@ -210,6 +219,200 @@ public class DkMsiProviderService extends AbstractProviderService {
         cleanUpMessageRepoFolder();
     }
 
+    /***************************************/
+    /** Tweets updating                   **/
+    /***************************************/
+
+
+    private String constructText(Message message) {
+        String tweet="";
+
+        String areaName = "Danmark";
+        for (Area.AreaDesc areaDesc : message.getArea().getDescs()) {
+            if (areaDesc.descDefined() && areaDesc.getLang().equals("da")) {
+                areaName = areaDesc.getName();
+                break;
+            }
+        }
+
+// handle empty danish description by using any other descriptionm
+        String base = "";
+        for (Message.MessageDesc msgDesc : message.getDescs()) {
+            if (msgDesc.descDefined() && msgDesc.getDescription().length() > 0)
+                if (msgDesc.getLang().matches("da")) {
+                    base = msgDesc.getDescription();
+                    break;
+                }
+                else
+                    base = msgDesc.getDescription();
+        }
+
+        base = base.replaceAll(" på (ca\\.)?pos(\\.|ition)(\\ |[0-9]|\\,|N|\\-)*E", "");
+        base = base.replaceAll(" in( appx\\.)? pos(\\.|ition)(\\ |[0-9]|\\,|N|\\-)*E", "");
+        base = base.replaceAll(" mellem pos(\\.|ition)(\\ |[0-9]|\\,|N|-)*E( og(\\ |[0-9]|\\,|N|-)*E)*", "");
+
+        Date fromDate = message.getValidFrom();
+        Date toDate = message.getValidTo();
+        String head = "";
+        if (fromDate.after(new Date()))
+            head = "Fra: " + fromDate.toString() + " ";
+        if (toDate != null)
+            head = head+"Til: " + toDate.toString() + " ";
+
+
+
+        String url=" https://msi-proxy.e-navigation.net"+"/#/dkmsi/da/details/"+message.getId();
+//        String url=" "+msiProxyApp.getBaseUri() + "/#/dkmsi/da/details/"+message.getId();
+
+        String tail = " #SFS" + areaName;
+
+        int available=0;
+        try {
+            available=TwitterProvider.MAX_TWEET_LENGTH-head.getBytes("UTF-8").length-1-url.getBytes("UTF-8").length-tail.getBytes("UTF-8").length;
+
+            while (base.getBytes("UTF-8").length > available)
+                base=base.substring(0,base.length()-1);
+
+            if (base.contains("."))
+                while (base.charAt(base.length()-1) != '.')
+                    base=base.substring(0,base.length()-1);
+            tweet=head+base+url+tail;
+            log.info("Tweet: "+tweet+" Length: "+tweet.getBytes("UTF-8").length);
+        } catch (UnsupportedEncodingException uee) {
+            log.error("This system does not know about UTF-8?!");
+        }
+
+        return tweet;
+    }
+
+    /**
+     * Compute the approximate center location of the message
+     *
+     * @param message the message
+     * @return the approximate center location of the message
+     */
+    private GeoLocation computeLocation(Message message) {
+        if (message.getLocations().size() == 0) {
+            return null;
+        }
+        Point minPt = new Point(90, 180);
+        Point maxPt = new Point(-90, -180);
+        message.getLocations().forEach(loc -> loc.getPoints().forEach(pt -> {
+                    maxPt.setLat(Math.max(maxPt.getLat(), pt.getLat()));
+                    maxPt.setLon(Math.max(maxPt.getLon(), pt.getLon()));
+                    minPt.setLat(Math.min(minPt.getLat(), pt.getLat()));
+                    minPt.setLon(Math.min(minPt.getLon(), pt.getLon()));
+                }
+        ));
+
+        return new GeoLocation((maxPt.getLat() + minPt.getLat()) / 2.0, (maxPt.getLon() + minPt.getLon()) / 2.0);
+    }
+
+    private twitter4j.Status sendUpdate(Message message, String tweetText) throws TwitterException {
+        //Instantiate and initialize a new twitter status update
+        String url = msiProxyApp.getBaseUri();
+        try {
+            StatusUpdate statusUpdate = new StatusUpdate(tweetText);
+
+            String completeUrl=url+ "/message-map-image/dkmsi/"+message.getId()+".png";
+            statusUpdate.setMedia(
+                    message.getSeriesIdentifier().getFullId(),
+                    new URL(completeUrl).openStream());
+
+            // Compute the location
+            GeoLocation location = computeLocation(message);
+            if (location != null) {
+                statusUpdate.setLocation(location);
+            }
+
+            log.info("Publishing Twitter message: " + tweetText);
+            return twitterProvider.getInstance().updateStatus(statusUpdate);
+        } catch (MalformedURLException mue) {
+            log.error("Malformed URL, tweet not created: " + url + "/dkmsi/da/details/" + message.getId());
+        } catch (IOException ioe) {
+            log.error("IO exception, tweet not created: " + message.getMessageId());
+        }
+        return null;
+    }
+
+    private twitter4j.Status deleteTweet(Long tweetId) throws TwitterException {
+        log.info("Deleting Tweet: " + tweetId);
+        return twitterProvider.getInstance().destroyStatus(tweetId);
+    }
+
+    private void synchronizeTweets(List<Message> activeMessages) {
+        // insert new tweets
+        for(Message msg:activeMessages) {
+            try {
+                if (msg.getMessageId() != null) {
+                    List<Tweet> tweetList = (List<Tweet>) em.createNamedQuery("Tweet.findByMessageId").setParameter("messageId", msg.getMessageId()).getResultList();
+                    if (tweetList.size() == 0) {
+                        String tweetText = "";
+                        try {
+                            tweetText = constructText(msg);
+                            twitter4j.Status status = sendUpdate(msg, tweetText);
+                            Tweet tweet = new Tweet(
+                                    msg.getMessageId(),
+                                    status.getId(),
+                                    tweetText,
+                                    msg.getValidFrom(),
+                                    msg.getValidTo()
+                            );
+                            em.persist(tweet);
+                        } catch (TwitterException te) {
+                            log.error("Adding single tweet fails, warning ignored: " + tweetText + " messageId: " + msg.getMessageId());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                log.error("Creating tweets failed" + "\n" + sw.toString());
+            }
+        };
+
+
+// remove tweets for inactive messages
+        Query findAllTweet = em.createNamedQuery("Tweet.findAll");
+        List<Integer> deleteIds = new ArrayList<Integer>();
+        try {
+            List<Tweet> tweetList = (List<Tweet>) findAllTweet.getResultList();
+            int index = 0;
+            for (Tweet twt : tweetList) {
+                boolean messageFound = false;
+                for (Message msg : messages) {
+                    if (msg.getMessageId() != null && msg.getMessageId().equals(twt.getMessageId())) {
+                        messageFound = true;
+                        break;
+                    }
+                }
+                if (!messageFound) {
+                    log.info("Delete tweet:" + index);
+                    try {
+                        deleteTweet(twt.getTwitterId());
+                        deleteIds.add(index);
+                    } catch (TwitterException te) {
+                        log.error("Deleting single tweet fails: " + twt.getTwitterId());
+                    }
+                }
+                index++;
+            }
+            deleteIds.forEach(id -> {
+                em.remove(tweetList.get(id));
+            });
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            log.error("Deleting tweets failed" + "\n" + sw.toString());
+        }
+    }
+
+    ;
+
+/**
+ * Message loading
+ * {@inheritDoc}
+ */
     /***************************************/
     /** Message loading                   **/
     /***************************************/
@@ -274,6 +477,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 .map(ActiveMessage::new)
                 .collect(Collectors.toList());
     }
+
 
     /**
      * Checks if the list of active messages has changed
@@ -343,39 +547,40 @@ public class DkMsiProviderService extends AbstractProviderService {
 
         Object[] row = msiData.get(0);
         int col = 0;
-        Integer messageId           = getInt(row, col++);
-        Boolean statusDraft         = getBoolean(row, col++);
-        String  navtexNo            = getString(row, col++);
-        String  descriptionEn       = getString(row, col++);
-        String  descriptionDa       = getString(row, col++);
-        String  title               = getString(row, col++);
-        Date    validFrom           = getDate(row, col++);
-        Date    validTo             = getDate(row, col++);
-        Date    created             = getDate(row, col++);
-        Date    updated             = getDate(row, col++);
-        Date    deleted             = getDate(row, col++);
-        Integer version             = getInt(row, col++);
-        String  priority            = getString(row, col++);
-        String  messageType         = getString(row, col++);
-        Integer category1Id         = getInt(row, col++);
-        String  category1En         = getString(row, col++);
-        String  category1Da         = getString(row, col++);
-        Integer category2Id         = getInt(row, col++);
-        String  category2En         = getString(row, col++);
-        String  category2Da         = getString(row, col++);
-        Integer area1Id             = getInt(row, col++);
-        String  area1En             = getString(row, col++);
-        String  area1Da             = getString(row, col++);
-        Integer area2Id             = getInt(row, col++);
-        String  area2En             = getString(row, col++);
-        String  area2Da             = getString(row, col++);
-        String  area3En             = getString(row, col++);
-        String  area3Da             = getString(row, col++);
-        String  locationType        = getString(row, col);
+        Integer messageId = getInt(row, col++);
+        Boolean statusDraft = getBoolean(row, col++);
+        String navtexNo = getString(row, col++);
+        String descriptionEn = getString(row, col++);
+        String descriptionDa = getString(row, col++);
+        String title = getString(row, col++);
+        Date validFrom = getDate(row, col++);
+        Date validTo = getDate(row, col++);
+        Date created = getDate(row, col++);
+        Date updated = getDate(row, col++);
+        Date deleted = getDate(row, col++);
+        Integer version = getInt(row, col++);
+        String priority = getString(row, col++);
+        String messageType = getString(row, col++);
+        Integer category1Id = getInt(row, col++);
+        String category1En = getString(row, col++);
+        String category1Da = getString(row, col++);
+        Integer category2Id = getInt(row, col++);
+        String category2En = getString(row, col++);
+        String category2Da = getString(row, col++);
+        Integer area1Id = getInt(row, col++);
+        String area1En = getString(row, col++);
+        String area1Da = getString(row, col++);
+        Integer area2Id = getInt(row, col++);
+        String area2En = getString(row, col++);
+        String area2Da = getString(row, col++);
+        String area3En = getString(row, col++);
+        String area3Da = getString(row, col++);
+        String locationType = getString(row, col);
 
         Message message = new Message();
 
         message.setId(id);
+        message.setMessageId(messageId);
         message.setCreated(created);
         message.setUpdated(updated);
         message.setVersion(version);
@@ -453,11 +658,20 @@ public class DkMsiProviderService extends AbstractProviderService {
         Location location = new Location();
         message.checkCreateLocations().add(location);
         switch (locationType) {
-            case "Point": location.setType(LocationType.POINT); break;
-            case "Points": location.setType(LocationType.POINT); break;
-            case "Polygon": location.setType(LocationType.POLYGON); break;
-            case "Polyline": location.setType(LocationType.POLYLINE); break;
-            default: location.setType(LocationType.POLYLINE);
+            case "Point":
+                location.setType(LocationType.POINT);
+                break;
+            case "Points":
+                location.setType(LocationType.POINT);
+                break;
+            case "Polygon":
+                location.setType(LocationType.POLYGON);
+                break;
+            case "Polyline":
+                location.setType(LocationType.POLYLINE);
+                break;
+            default:
+                location.setType(LocationType.POLYLINE);
         }
 
         return message;
@@ -753,10 +967,10 @@ public class DkMsiProviderService extends AbstractProviderService {
 
             // Read the location point data from the DB
             int col = 0;
-            Integer latDeg      = getInt(row, col++);
-            Double  latMin      = getDouble(row, col++);
-            Integer lonDeg      = getInt(row, col++);
-            Double  lonMin      = getDouble(row, col);
+            Integer latDeg = getInt(row, col++);
+            Double latMin = getDouble(row, col++);
+            Integer lonDeg = getInt(row, col++);
+            Double lonMin = getDouble(row, col);
 
             double lat = latDeg.doubleValue() + latMin / 60.0;
             double lon = lonDeg.doubleValue() + lonMin / 60.0;
@@ -774,6 +988,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
     /**
      * Formats the time interval for firing exercises
+     *
      * @param msg the message
      * @param lang the language
      */
@@ -792,6 +1007,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
     /**
      * Append the description to the message description field
+     *
      * @param msg the message
      * @param lang the language
      * @param subtitle an optional subtitle
@@ -813,6 +1029,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Creates an Area template based on the given Danish and English name
      * and optionally a parent Area
+     *
      * @param id the id of the area
      * @param nameEn English name
      * @param nameDa Danish name
@@ -838,6 +1055,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Creates an Category template based on the given Danish and English name
      * and optionally a parent Category
+     *
      * @param id the id of the category
      * @param nameEn English name
      * @param nameDa Danish name

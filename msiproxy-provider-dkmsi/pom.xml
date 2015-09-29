@@ -14,6 +14,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.twitter4j</groupId>
+            <artifactId>twitter4j-core</artifactId>
+            <version>4.0.2</version>
+        </dependency>
+        <dependency>
             <groupId>dk.dma.msiproxy</groupId>
             <artifactId>msiproxy-common</artifactId>
             <version>1.0-SNAPSHOT</version>

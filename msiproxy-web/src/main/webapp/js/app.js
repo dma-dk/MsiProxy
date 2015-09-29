@@ -10,7 +10,11 @@ var app = angular.module('msiproxy.app', [ 'ngRoute', 'ngSanitize', 'ui.bootstra
 
         $routeProvider.when('/:provider/:lang/details', {
             templateUrl: 'partials/message-details.html'
+        }).when('/:provider/:lang/details/:messageId', {
+            templateUrl: 'partials/message-details.html'
         }).when('/:provider/:lang/map', {
+            templateUrl: 'partials/message-map.html'
+        }).when('/:provider/:lang/map/:messageId', {
             templateUrl: 'partials/message-map.html'
         }).otherwise({
             redirectTo: '/dkmsi/da/details'
