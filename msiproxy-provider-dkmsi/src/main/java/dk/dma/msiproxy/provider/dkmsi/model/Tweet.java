@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.msiproxy.model.msi;
+package dk.dma.msiproxy.provider.dkmsi.model;
 
 import javax.persistence.*;
 import java.util.Date;

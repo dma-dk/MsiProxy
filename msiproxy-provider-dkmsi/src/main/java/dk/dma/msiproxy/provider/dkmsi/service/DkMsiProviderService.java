@@ -24,11 +24,14 @@ import dk.dma.msiproxy.common.repo.RepositoryService;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.common.util.TimeUtils;
+import dk.dma.msiproxy.model.MessageFilter;
 import dk.dma.msiproxy.model.msi.*;
 import dk.dma.msiproxy.model.msi.Status;
 import dk.dma.msiproxy.model.msi.Type;
 import dk.dma.msiproxy.provider.dkmsi.conf.DkMsiDB;
+import dk.dma.msiproxy.provider.dkmsi.model.Tweet;
 import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterProvider;
+import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterUpdate;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import twitter4j.GeoLocation;
@@ -93,9 +96,6 @@ public class DkMsiProviderService extends AbstractProviderService {
     MsiProxyApp msiProxyApp;
 
     @Inject
-    TwitterProvider twitterProvider;
-
-    @Inject
     Logger log;
 
     @Inject
@@ -110,6 +110,9 @@ public class DkMsiProviderService extends AbstractProviderService {
     @Inject
     @DkMsiDB
     EntityManager em;
+
+    @Inject
+    TwitterUpdate twitterUpdate;
 
     @Inject
     @Setting(value = "firingExercisesDays", defaultValue = "7")
@@ -237,15 +240,11 @@ public class DkMsiProviderService extends AbstractProviderService {
 
 // handle empty danish description by using any other descriptionm
         String base = "";
-        for (Message.MessageDesc msgDesc : message.getDescs()) {
-            if (msgDesc.descDefined() && msgDesc.getDescription().length() > 0)
-                if (msgDesc.getLang().matches("da")) {
-                    base = msgDesc.getDescription();
-                    break;
-                }
-                else
-                    base = msgDesc.getDescription();
-        }
+        Message.MessageDesc msgDesc=message.getDescs().get(0);
+        if (msgDesc == null)
+            return "";
+
+        base = msgDesc.getDescription();
 
         base = base.replaceAll(" på (ca\\.)?pos(\\.|ition)(\\ |[0-9]|\\,|N|\\-)*E", "");
         base = base.replaceAll(" in( appx\\.)? pos(\\.|ition)(\\ |[0-9]|\\,|N|\\-)*E", "");
@@ -258,8 +257,6 @@ public class DkMsiProviderService extends AbstractProviderService {
             head = "Fra: " + fromDate.toString() + " ";
         if (toDate != null)
             head = head+"Til: " + toDate.toString() + " ";
-
-
 
         String url=" https://msi-proxy.e-navigation.net"+"/#/dkmsi/da/details/"+message.getId();
 //        String url=" "+msiProxyApp.getBaseUri() + "/#/dkmsi/da/details/"+message.getId();
@@ -285,83 +282,20 @@ public class DkMsiProviderService extends AbstractProviderService {
         return tweet;
     }
 
-    /**
-     * Compute the approximate center location of the message
-     *
-     * @param message the message
-     * @return the approximate center location of the message
-     */
-    private GeoLocation computeLocation(Message message) {
-        if (message.getLocations().size() == 0) {
-            return null;
-        }
-        Point minPt = new Point(90, 180);
-        Point maxPt = new Point(-90, -180);
-        message.getLocations().forEach(loc -> loc.getPoints().forEach(pt -> {
-                    maxPt.setLat(Math.max(maxPt.getLat(), pt.getLat()));
-                    maxPt.setLon(Math.max(maxPt.getLon(), pt.getLon()));
-                    minPt.setLat(Math.min(minPt.getLat(), pt.getLat()));
-                    minPt.setLon(Math.min(minPt.getLon(), pt.getLon()));
-                }
-        ));
-
-        return new GeoLocation((maxPt.getLat() + minPt.getLat()) / 2.0, (maxPt.getLon() + minPt.getLon()) / 2.0);
-    }
-
-    private twitter4j.Status sendUpdate(Message message, String tweetText) throws TwitterException {
-        //Instantiate and initialize a new twitter status update
-        String url = msiProxyApp.getBaseUri();
-        try {
-            StatusUpdate statusUpdate = new StatusUpdate(tweetText);
-
-            String completeUrl=url+ "/message-map-image/dkmsi/"+message.getId()+".png";
-            statusUpdate.setMedia(
-                    message.getSeriesIdentifier().getFullId(),
-                    new URL(completeUrl).openStream());
-
-            // Compute the location
-            GeoLocation location = computeLocation(message);
-            if (location != null) {
-                statusUpdate.setLocation(location);
-            }
-
-            log.info("Publishing Twitter message: " + tweetText);
-            return twitterProvider.getInstance().updateStatus(statusUpdate);
-        } catch (MalformedURLException mue) {
-            log.error("Malformed URL, tweet not created: " + url + "/dkmsi/da/details/" + message.getId());
-        } catch (IOException ioe) {
-            log.error("IO exception, tweet not created: " + message.getMessageId());
-        }
-        return null;
-    }
-
-    private twitter4j.Status deleteTweet(Long tweetId) throws TwitterException {
-        log.info("Deleting Tweet: " + tweetId);
-        return twitterProvider.getInstance().destroyStatus(tweetId);
-    }
-
     private void synchronizeTweets(List<Message> activeMessages) {
         // insert new tweets
-        for(Message msg:activeMessages) {
+
+        // generate list of messages with danish descriptors
+        List<Message> natMessages=getCachedMessages(new MessageFilter().lang("da"));
+
+        for(Message msg:natMessages) {
             try {
                 if (msg.getMessageId() != null) {
                     List<Tweet> tweetList = (List<Tweet>) em.createNamedQuery("Tweet.findByMessageId").setParameter("messageId", msg.getMessageId()).getResultList();
                     if (tweetList.size() == 0) {
                         String tweetText = "";
-                        try {
-                            tweetText = constructText(msg);
-                            twitter4j.Status status = sendUpdate(msg, tweetText);
-                            Tweet tweet = new Tweet(
-                                    msg.getMessageId(),
-                                    status.getId(),
-                                    tweetText,
-                                    msg.getValidFrom(),
-                                    msg.getValidTo()
-                            );
-                            em.persist(tweet);
-                        } catch (TwitterException te) {
-                            log.error("Adding single tweet fails, warning ignored: " + tweetText + " messageId: " + msg.getMessageId());
-                        }
+                        tweetText = constructText(msg);
+                        twitterUpdate.updateTwitter(msg,tweetText);
                     }
                 }
             } catch (Exception e) {
@@ -370,7 +304,6 @@ public class DkMsiProviderService extends AbstractProviderService {
                 log.error("Creating tweets failed" + "\n" + sw.toString());
             }
         };
-
 
 // remove tweets for inactive messages
         Query findAllTweet = em.createNamedQuery("Tweet.findAll");
@@ -389,7 +322,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 if (!messageFound) {
                     log.info("Delete tweet:" + index);
                     try {
-                        deleteTweet(twt.getTwitterId());
+                        twitterUpdate.deleteTweet(twt.getTwitterId());
                         deleteIds.add(index);
                     } catch (TwitterException te) {
                         log.error("Deleting single tweet fails: " + twt.getTwitterId());
@@ -405,9 +338,7 @@ public class DkMsiProviderService extends AbstractProviderService {
             e.printStackTrace(new PrintWriter(sw));
             log.error("Deleting tweets failed" + "\n" + sw.toString());
         }
-    }
-
-    ;
+    };
 
 /**
  * Message loading
