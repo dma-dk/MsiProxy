@@ -139,12 +139,30 @@ angular.module('msiproxy.app')
                     function formatTooltip(feature) {
                         var msg = feature.data.msi;
                         var serId = (msg.seriesIdentifier.number) ? ' (' + msg.seriesIdentifier.shortId + ')' : '';
+                        var title = LangService.messageTitleLine(msg) + serId;
+
+                        // Hack alert:
+                        if (title.indexOf('Danmark - ') == 0 || title.indexOf('Denmark - ') == 0) {
+                            title = title.substr('Danmark - '.length);
+                        }
+
                         var desc =
                             '<div class="msi-map-tooltip">' +
-                              '<div><strong>' + LangService.messageTitleLine(msg) + serId + '</strong></div>' +
+                              '<div><strong>' + title + '</strong></div>' +
                               '<div><small>' + LangService.messageTime(msg) + '</small></div>' +
                             '</div>';
                         return desc;
+                    }
+
+                    /**
+                     * Estimates the size of the tooltip popup
+                     * @param html the html content
+                     * @returns the estimated size
+                     */
+                    function computePopupSize(html) {
+                        var titleLineNo = html.occurrences("msi-map-tooltip");
+                        var timeLineNo = html.occurrences("<br />");
+                        return new OpenLayers.Size(300, 10 + 40 * titleLineNo + 14 *  timeLineNo);
                     }
 
                     /**
@@ -162,6 +180,20 @@ angular.module('msiproxy.app')
                         hoverControl.unselectAll();
                     }
 
+                    /**
+                     * Checks if point is within the bounds of the given feature
+                     * @param f the feature
+                     * @param pt the point
+                     * @return if the point is within the bounds of the given feature
+                     */
+                    function featureAtPoint(f, pt, mousePos) {
+                        if (f.data.locType && f.data.locType == 'POINT') {
+                            var featurePos = map.getViewPortPxFromLonLat(new OpenLayers.LonLat(f.geometry.x, f.geometry.y));
+                            return featurePos.distanceTo(mousePos) < 12;
+                        }
+                        return f.atPoint(pt, 0, 0);
+                    }
+
                     // The map is only interactive when displaying a list of messages, i.e. an overview map.
                     // When used in the message details dialog, the map is not interactive.
                     if (scope.interactive) {
@@ -170,7 +202,7 @@ angular.module('msiproxy.app')
                             msiLayer, {
                                 hover: true,
                                 onBeforeSelect: function(feature) {
-                                    if (feature.popup) {
+                                    if (map.popup) {
                                         return;
                                     }
 
@@ -178,30 +210,30 @@ angular.module('msiproxy.app')
                                     var html = formatTooltip(feature);
 
                                     // add code to create tooltip/popup
-                                    feature.popup = new OpenLayers.Popup.Anchored(
+                                    map.popup = new OpenLayers.Popup.Anchored(
                                         "tooltip",
                                         new OpenLayers.LonLat(b.left, b.bottom),
-                                        new OpenLayers.Size(300, 50 + 18 *  html.occurrences("<br />")),
+                                        computePopupSize(html),
                                         html,
                                         {'size': new OpenLayers.Size(0,0), 'offset': new OpenLayers.Pixel(170, 12)},
                                         false,
                                         null);
 
-                                    feature.popup.backgroundColor = '#eeeeee';
-                                    feature.popup.calculateRelativePosition = function () {
+                                    map.popup.backgroundColor = '#eeeeee';
+                                    map.popup.calculateRelativePosition = function () {
                                         return 'bl';
                                     };
 
 
-                                    map.addPopup(feature.popup);
+                                    map.addPopup(map.popup);
                                     return true;
                                 },
                                 onUnselect: function(feature) {
                                     // remove tooltip
-                                    if (feature.popup) {
-                                        map.removePopup(feature.popup);
-                                        feature.popup.destroy();
-                                        feature.popup=null;
+                                    if (map.popup) {
+                                        map.removePopup(map.popup);
+                                        map.popup.destroy();
+                                        map.popup=null;
                                     }
                                 }
                             });
@@ -222,6 +254,31 @@ angular.module('msiproxy.app')
                                 double : false
                             });
                         msiSelect.activate();
+
+                        // Overlapping polygon features poses a problem, in that the top-most polygon
+                        // will hide the ones below.
+                        // Attempt to fix this by tracking mouse moved events. Whenever a popup is being
+                        // displayed, update the content to show the text for all features below the cursor.
+                        map.events.register("mousemove", map, function (e) {
+                            var mousePos = this.events.getMousePosition(e);
+                            var point = map.getLonLatFromPixel(mousePos);
+                            if (map.popup) {
+                                var includedMessages = [];
+                                var html = '';
+                                for (var i in msiLayer.features) {
+                                    var f = msiLayer.features[i];
+                                    var msg = f.data.msi;
+                                    if (featureAtPoint(f, point, mousePos) && $.inArray(msg.id, includedMessages) == -1) {
+                                        includedMessages.push(msg.id);
+                                        html += formatTooltip(f);
+                                    }
+                                }
+                                if (map.popup.contentHTML != html) {
+                                    map.popup.setContentHTML(html);
+                                    map.popup.setSize(computePopupSize(html));
+                                }
+                            }
+                        });
 
                     }
 
