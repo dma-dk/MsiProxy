@@ -9,6 +9,7 @@ ADD install-wildfly-pom.xml /
 ADD standalone.xml /
 ADD module.xml /
 ADD mysql-connector-java-5.1.30-bin.jar /
+ADD msiproxy-web.war /
 
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
 # Make sure the distribution is available from a well-known place
@@ -21,6 +22,7 @@ RUN cp /standalone.xml /wildfly/standalone/configuration/
 RUN mkdir -p /wildfly/modules/com/mysql/main
 RUN cp /module.xml /wildfly/modules/com/mysql/main/
 RUN cp /mysql-connector-java-5.1.30-bin.jar /wildfly/modules/com/mysql/main/
+RUN cp /msiproxy-web.war /wildfly/standalone/deployments/
 RUN chmod +x /wildfly/bin/*.sh
 
 # Set up management port

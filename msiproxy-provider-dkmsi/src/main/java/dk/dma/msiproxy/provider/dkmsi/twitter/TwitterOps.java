@@ -1,14 +1,15 @@
 package dk.dma.msiproxy.provider.dkmsi.twitter;
 
 import dk.dma.msiproxy.common.MsiProxyApp;
+import dk.dma.msiproxy.common.settings.DefaultSetting;
+import dk.dma.msiproxy.common.settings.Settings;
 import dk.dma.msiproxy.model.msi.Message;
 import dk.dma.msiproxy.model.msi.Point;
 import dk.dma.msiproxy.provider.dkmsi.conf.DkMsiDB;
 import dk.dma.msiproxy.provider.dkmsi.model.Tweet;
 import org.slf4j.Logger;
-import twitter4j.GeoLocation;
-import twitter4j.StatusUpdate;
-import twitter4j.TwitterException;
+import twitter4j.*;
+import twitter4j.api.TweetsResources;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -17,15 +18,15 @@ import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Created by hje on 9/29/15.
- *
+ * <p>
  * Used to isolate tgransaction for en twitter update
- *
  */
 @Lock(LockType.READ)
-public class TwitterUpdate {
+public class TwitterOps {
 
     @Inject
     @DkMsiDB
@@ -40,6 +41,9 @@ public class TwitterUpdate {
     @Inject
     Logger log;
 
+    @Inject
+    Settings settings;
+
     /**
      * Compute the approximate center location of the message
      *
@@ -47,7 +51,7 @@ public class TwitterUpdate {
      * @return the approximate center location of the message
      */
     private GeoLocation computeLocation(Message message) {
-        if (message.getLocations().size() == 0) {
+        if (message.getLocations() == null || message.getLocations().size() == 0) {
             return null;
         }
         Point minPt = new Point(90, 180);
@@ -63,16 +67,20 @@ public class TwitterUpdate {
         return new GeoLocation((maxPt.getLat() + minPt.getLat()) / 2.0, (maxPt.getLon() + minPt.getLon()) / 2.0);
     }
 
+    //Instantiate and initialize a new twitter status update
+
     private twitter4j.Status sendUpdate(Message message, String tweetText) throws TwitterException {
-        //Instantiate and initialize a new twitter status update
-        String url = msiProxyApp.getBaseUri();
+
+        //get a uri from the settings if available otherwise go with this apps uri
+        dk.dma.msiproxy.common.settings.Setting PROXY_BASE_URI = new DefaultSetting("proxyBaseUri", msiProxyApp.getBaseUri());
+        String url = settings.get(PROXY_BASE_URI) + "/message-map-image/dkmsi/" + message.getId() + ".png";
+
         try {
             StatusUpdate statusUpdate = new StatusUpdate(tweetText);
 
-            String completeUrl=url+ "/message-map-image/dkmsi/"+message.getId()+".png";
             statusUpdate.setMedia(
                     message.getSeriesIdentifier().getFullId(),
-                    new URL(completeUrl).openStream());
+                    new URL(url).openStream());
 
             // Compute the location
             GeoLocation location = computeLocation(message);
@@ -90,24 +98,30 @@ public class TwitterUpdate {
         return null;
     }
 
+    public ResponseList<Status> listTweets() throws TwitterException {
+        ResponseList responseList=twitterProvider.getInstance().getHomeTimeline();
+        return responseList;
+    }
+
+
     public twitter4j.Status deleteTweet(Long tweetId) throws TwitterException {
         log.info("Deleting Tweet: " + tweetId);
         return twitterProvider.getInstance().destroyStatus(tweetId);
     }
 
-    public void updateTwitter(Message msg,String tweetText) {
+    public void updateTwitter(Message msg, String tweetText) {
         try {
-        twitter4j.Status status = sendUpdate(msg, tweetText);
-        Tweet tweet = new Tweet(
-                msg.getMessageId(),
-                status.getId(),
-                tweetText,
-                msg.getValidFrom(),
-                msg.getValidTo()
-        );
-        em.persist(tweet);
+            twitter4j.Status status = sendUpdate(msg, tweetText);
+            Tweet tweet = new Tweet(
+                    msg.getMessageId(),
+                    status.getId(),
+                    tweetText,
+                    msg.getValidFrom(),
+                    msg.getValidTo()
+            );
+            em.persist(tweet);
         } catch (TwitterException te) {
-            log.error("Adding single tweet fails, warning ignored: " + tweetText + " messageId: " + msg.getMessageId());
+            log.error("Adding single tweet fails, warning ignored: " + tweetText + " messageId: " + msg.getMessageId() + "Twitter Exception: "+te.getErrorMessage() );
         }
     }
 }
