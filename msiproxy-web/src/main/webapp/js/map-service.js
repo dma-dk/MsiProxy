@@ -68,6 +68,14 @@ angular.module('msiproxy.app')
         return {
 
             /**
+             * Returns the source EPSG:4326 projection
+             * @returns the source EPSG:4326 projection
+             */
+            sourceProjection: function () {
+                return proj4326;
+            },
+
+            /**
              * Returns the target Mercator projection
              * @returns the target Mercator projection
              */
