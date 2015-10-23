@@ -625,7 +625,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 .getResultList();
 
         // If there are no points, remove the location
-        if (msiData.size() == 0) {
+        if (msiData.size() == 0 || msiData.get(0)[0] == null) {
             message.setLocations(null);
             return message;
         }
