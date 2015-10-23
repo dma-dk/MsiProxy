@@ -76,7 +76,7 @@ public class Message extends LocalizedEntity<Message.MessageDesc> {
 
         id = message.getId();
         updated = message.getUpdated();
-
+        messageId=message.getMessageId();
         seriesIdentifier = message.getSeriesIdentifier();
         type = message.getType();
         validFrom = message.getValidFrom();

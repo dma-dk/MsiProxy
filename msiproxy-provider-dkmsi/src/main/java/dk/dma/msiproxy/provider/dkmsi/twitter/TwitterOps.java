@@ -67,7 +67,7 @@ public class TwitterOps {
         return new GeoLocation((maxPt.getLat() + minPt.getLat()) / 2.0, (maxPt.getLon() + minPt.getLon()) / 2.0);
     }
 
-    //Instantiate and initialize a new twitter status update
+    //Instantiate and initialize a new twitter status update https://msi-proxy.e-navigation.net/message-map-image/dkmsi/14423.png
 
     private twitter4j.Status sendUpdate(Message message, String tweetText) throws TwitterException {
 
@@ -88,7 +88,6 @@ public class TwitterOps {
                 statusUpdate.setLocation(location);
             }
 
-            log.info("Publishing Twitter message: " + tweetText);
             return twitterProvider.getInstance().updateStatus(statusUpdate);
         } catch (MalformedURLException mue) {
             log.error("Malformed URL, tweet not created: " + url + "/dkmsi/da/details/" + message.getId());
@@ -99,7 +98,9 @@ public class TwitterOps {
     }
 
     public ResponseList<Status> listTweets() throws TwitterException {
-        ResponseList responseList=twitterProvider.getInstance().getHomeTimeline();
+        Paging paging = new Paging();
+        paging.setCount(200);
+        ResponseList responseList=twitterProvider.getInstance().getHomeTimeline(paging);
         return responseList;
     }
 

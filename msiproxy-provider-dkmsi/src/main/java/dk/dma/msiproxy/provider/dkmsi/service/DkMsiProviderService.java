@@ -21,6 +21,8 @@ import dk.dma.msiproxy.common.provider.AbstractProviderService;
 import dk.dma.msiproxy.common.provider.MessageCache;
 import dk.dma.msiproxy.common.provider.Providers;
 import dk.dma.msiproxy.common.repo.RepositoryService;
+import dk.dma.msiproxy.common.settings.DefaultSetting;
+import dk.dma.msiproxy.common.settings.Settings;
 import dk.dma.msiproxy.common.settings.annotation.Setting;
 import dk.dma.msiproxy.common.util.TextUtils;
 import dk.dma.msiproxy.common.util.TimeUtils;
@@ -31,11 +33,10 @@ import dk.dma.msiproxy.model.msi.Type;
 import dk.dma.msiproxy.provider.dkmsi.conf.DkMsiDB;
 import dk.dma.msiproxy.provider.dkmsi.model.Tweet;
 import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterProvider;
-import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterUpdate;
+import dk.dma.msiproxy.provider.dkmsi.twitter.TwitterOps;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
-import twitter4j.GeoLocation;
-import twitter4j.StatusUpdate;
+import twitter4j.ResponseList;
 import twitter4j.TwitterException;
 
 import javax.annotation.PostConstruct;
@@ -43,13 +44,10 @@ import javax.ejb.*;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -66,10 +64,10 @@ import java.util.stream.Collectors;
  * Provides a business interface for accessing Danish legacy MSI messages.
  * The resulting MSI list will be composed from two types of legacy messages:
  * <ul>
- *     <li>MSI: The legacy MSI message</li>
- *     <li>Firing Exercises: The legacy firing exercises</li>
+ * <li>MSI: The legacy MSI message</li>
+ * <li>Firing Exercises: The legacy firing exercises</li>
  * </ul>
- *
+ * <p>
  * Both types of data are read in from the legacy MSI-editor database, or rather,
  * an export of selected tables from the legacy database. The relevant export is
  * created thus:
@@ -87,10 +85,13 @@ public class DkMsiProviderService extends AbstractProviderService {
 
     public static final String PROVIDER_ID = "dkmsi";
     public static final int PRIORITY = 200;
-    public static final String[] LANGUAGES = { "da", "en" };
+    public static final String[] LANGUAGES = {"da", "en"};
 
     Pattern CHART_PATTERN_1 = Pattern.compile("(\\d+)");
     Pattern CHART_PATTERN_2 = Pattern.compile("(\\d+) \\(INT (\\d+)\\)");
+
+    @Inject
+    Settings settings;
 
     @Inject
     MsiProxyApp msiProxyApp;
@@ -112,7 +113,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     EntityManager em;
 
     @Inject
-    TwitterUpdate twitterUpdate;
+    TwitterOps twitterOps;
 
     @Inject
     @Setting(value = "firingExercisesDays", defaultValue = "7")
@@ -194,7 +195,6 @@ public class DkMsiProviderService extends AbstractProviderService {
     public void init() {
         // Register with the providers service
         providers.registerProvider(this);
-
         // Load messages
         loadMessages();
 // server needs to be initialized before tweets can be synchronized    }
@@ -207,17 +207,16 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Called every 5 minutes to update message list
      */
-        // FIXME: production values    @Schedule(persistent = false, second = "38", minute = "*/5", hour = "*", dayOfWeek = "*", year = "*")
-@Schedule(persistent = false, second = "20", minute = "*", hour = "*", dayOfWeek = "*", year = "*")
-        protected void loadMessagesPeriodically() {
+    @Schedule(persistent = false, second = "1", minute = "*/5", hour = "*", dayOfWeek = "*", year = "*")
+    protected void loadMessagesPeriodically() {
         loadMessages();
         synchronizeTweets(getActiveMessages());
-}
+    }
 
     /**
      * Called every hour to clean up the message repo folder
      */
-    @Schedule(persistent=false, second="30", minute="27", hour="*/1", dayOfWeek="*", year="*")
+    @Schedule(persistent = false, second = "30", minute = "27", hour = "*/1", dayOfWeek = "*", year = "*")
     protected void cleanUpMessageRepoFolderPeriodically() {
         cleanUpMessageRepoFolder();
     }
@@ -228,7 +227,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
 
     private String constructText(Message message) {
-        String tweet="";
+        String tweet = "";
 
         String areaName = "Danmark";
         for (Area.AreaDesc areaDesc : message.getArea().getDescs()) {
@@ -240,7 +239,7 @@ public class DkMsiProviderService extends AbstractProviderService {
 
 // handle empty danish description by using any other descriptionm
         String base = "";
-        Message.MessageDesc msgDesc=message.getDescs().get(0);
+        Message.MessageDesc msgDesc = message.getDescs().get(0);
         if (msgDesc == null)
             return "";
 
@@ -256,25 +255,25 @@ public class DkMsiProviderService extends AbstractProviderService {
         if (fromDate.after(new Date()))
             head = "Fra: " + fromDate.toString() + " ";
         if (toDate != null)
-            head = head+"Til: " + toDate.toString() + " ";
+            head = head + "Til: " + toDate.toString() + " ";
 
-        String url=" https://msi-proxy.e-navigation.net"+"/#/dkmsi/da/details/"+message.getId();
-//        String url=" "+msiProxyApp.getBaseUri() + "/#/dkmsi/da/details/"+message.getId();
+        //get a uri from the settings if available otherwise go with this apps uri
+        dk.dma.msiproxy.common.settings.Setting PROXY_BASE_URI = new DefaultSetting("proxyBaseUri", msiProxyApp.getBaseUri());
+        String url = " " + settings.get(PROXY_BASE_URI) + "/#/dkmsi/da/details/" + message.getId();
 
         String tail = " #SFS" + areaName;
 
-        int available=0;
+        int available = 0;
         try {
-            available=TwitterProvider.MAX_TWEET_LENGTH-head.getBytes("UTF-8").length-1-url.getBytes("UTF-8").length-tail.getBytes("UTF-8").length;
+            available = TwitterProvider.MAX_TWEET_LENGTH - head.getBytes("UTF-8").length - 1 - url.getBytes("UTF-8").length - tail.getBytes("UTF-8").length;
 
             while (base.getBytes("UTF-8").length > available)
-                base=base.substring(0,base.length()-1);
+                base = base.substring(0, base.length() - 1);
 
             if (base.contains("."))
-                while (base.charAt(base.length()-1) != '.')
-                    base=base.substring(0,base.length()-1);
-            tweet=head+base+url+tail;
-            log.info("Tweet: "+tweet+" Length: "+tweet.getBytes("UTF-8").length);
+                while (base.charAt(base.length() - 1) != '.')
+                    base = base.substring(0, base.length() - 1);
+            tweet = head + base + url + tail;
         } catch (UnsupportedEncodingException uee) {
             log.error("This system does not know about UTF-8?!");
         }
@@ -282,30 +281,57 @@ public class DkMsiProviderService extends AbstractProviderService {
         return tweet;
     }
 
-    private void synchronizeTweets(List<Message> activeMessages) {
+    private synchronized void synchronizeTweets(List<Message> activeMessages) {
+
+        // clean up unknown tweets, will not delete more than 200 in one pass :-?
+
+        ResponseList responseList;
+        List<Long> twitterIdList;
+        try {
+            responseList = twitterOps.listTweets();
+            for (Object o : responseList) {
+                twitter4j.Status status = (twitter4j.Status) o;
+                twitterIdList = em.createNamedQuery("Tweet.findByTwitterId").setParameter("twitterId", status.getId()).getResultList();
+                if (twitterIdList.size() == 0)
+                    try {
+                        log.info("Deleting tweet with id: " + status.getId() + " text: " + status.getText());
+                        twitterOps.deleteTweet((status.getId()));
+                    } catch (Exception e) {
+                        log.error("Tweet cleanup fails, tweetId: "+status.getId());
+                    }
+            }
+        } catch (Exception e) {
+            log.error("Fetching list of tweets fails");
+        }
+
         // insert new tweets
 
         // generate list of messages with danish descriptors
-        List<Message> natMessages=getCachedMessages(new MessageFilter().lang("da"));
+        List<Message> natMessages = getCachedMessages(new MessageFilter().lang("da"));
 
-        for(Message msg:natMessages) {
+        for (Message msg : natMessages) {
             try {
                 if (msg.getMessageId() != null) {
                     List<Tweet> tweetList = (List<Tweet>) em.createNamedQuery("Tweet.findByMessageId").setParameter("messageId", msg.getMessageId()).getResultList();
                     if (tweetList.size() == 0) {
                         String tweetText = "";
                         tweetText = constructText(msg);
-                        twitterUpdate.updateTwitter(msg,tweetText);
+                        log.info("Adding tweet: " + msg.getMessageId()+" "+tweetText);
+                        twitterOps.updateTwitter(msg, tweetText);
                     }
-                }
+                } else
+                    log.error("No msgid! " + msg.getId());
+
             } catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
                 log.error("Creating tweets failed" + "\n" + sw.toString());
             }
-        };
+        }
+        ;
 
-// remove tweets for inactive messages
+// remove tweets for inactive messages - database and twitter alike
+
         Query findAllTweet = em.createNamedQuery("Tweet.findAll");
         List<Integer> deleteIds = new ArrayList<Integer>();
         try {
@@ -322,7 +348,8 @@ public class DkMsiProviderService extends AbstractProviderService {
                 if (!messageFound) {
                     log.info("Delete tweet:" + index);
                     try {
-                        twitterUpdate.deleteTweet(twt.getTwitterId());
+                        twitterOps.deleteTweet(twt.getTwitterId());
+                        log.info("Removing tweet: " + twt.getMessageId());
                         deleteIds.add(index);
                     } catch (TwitterException te) {
                         log.error("Deleting single tweet fails: " + twt.getTwitterId());
@@ -338,7 +365,7 @@ public class DkMsiProviderService extends AbstractProviderService {
             e.printStackTrace(new PrintWriter(sw));
             log.error("Deleting tweets failed" + "\n" + sw.toString());
         }
-    };
+    }
 
 /**
  * Message loading
@@ -438,7 +465,7 @@ public class DkMsiProviderService extends AbstractProviderService {
      * Reads the legacy MSI data for the given message and adds it to the message list.
      *
      * @param messages the message list to add the message to
-     * @param id the ID of the MSI to read in
+     * @param id       the ID of the MSI to read in
      * @return the resulting messages
      */
     @SuppressWarnings("unused")
@@ -578,11 +605,11 @@ public class DkMsiProviderService extends AbstractProviderService {
 
         // Categories
         // NB: The category structure is not very usable and will be changed for MSI-NM
-         Category category = createCategoryTemplate(category1Id, category1En, category1Da, null);
-         category = createCategoryTemplate(category2Id, category2En, category2Da, category);
-         if (category != null) {
+        Category category = createCategoryTemplate(category1Id, category1En, category1Da, null);
+        category = createCategoryTemplate(category2Id, category2En, category2Da, category);
+        if (category != null) {
             message.checkCreateCategories().add(category);
-         }
+        }
 
 
         // Read the location type
@@ -625,7 +652,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 .getResultList();
 
         // If there are no points, remove the location
-        if (msiData.size() == 0) {
+        if (msiData.size() == 0 || msiData.get(0)[0] == null) {
             message.setLocations(null);
             return message;
         }
@@ -636,10 +663,10 @@ public class DkMsiProviderService extends AbstractProviderService {
 
             // Read the location point data from the DB
             int col = 0;
-            Integer pointIndex      = getInt(row, col++);
-            Double pointLatitude    = getDouble(row, col++);
-            Double pointLongitude   = getDouble(row, col++);
-            Integer pointRadius     = getInt(row, col);
+            Integer pointIndex = getInt(row, col++);
+            Double pointLatitude = getDouble(row, col++);
+            Double pointLongitude = getDouble(row, col++);
+            Integer pointRadius = getInt(row, col);
 
             // If the type of the location is POINT, there must only be one point per location
             if (location.getType() == LocationType.POINT && location.checkCreatePoints().size() > 0) {
@@ -676,7 +703,7 @@ public class DkMsiProviderService extends AbstractProviderService {
      * Reads the firing exercises for the given ID and adds it to the list of messages
      *
      * @param messages the message list to add the message to
-     * @param id the id of the firing exercise to read in
+     * @param id       the id of the firing exercise to read in
      * @return the firing exercise
      */
     private Message readFiringExerciseMessage(List<Message> messages, Integer id) {
@@ -699,7 +726,7 @@ public class DkMsiProviderService extends AbstractProviderService {
      * merge the two.
      *
      * @param messages the list of messages to merge with message with
-     * @param message the firing exercise message to merge with the message list
+     * @param message  the firing exercise message to merge with the message list
      * @return the resulting message
      */
     private Message checkMergeFiringExercise(List<Message> messages, Message message) {
@@ -711,7 +738,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                     .filter(msg -> msg.getCategories() != null && Objects.equals(msg.getCategories().get(0).getId(), cat.getId()))
                     .filter(msg -> msg.getArea() != null && Objects.equals(msg.getArea().getId(), message.getArea().getId()))
                     .findFirst()
-                            .orElse(null);
+                    .orElse(null);
 
             if (firingExercise != null) {
                 // Update the dates of the existing firing exercise
@@ -736,7 +763,7 @@ public class DkMsiProviderService extends AbstractProviderService {
         // No firing exercise found for the same area - add it to the list
         messages.add(message);
 
-        return  message;
+        return message;
     }
 
     /**
@@ -763,22 +790,22 @@ public class DkMsiProviderService extends AbstractProviderService {
         for (Object[] row : feData) {
 
             int col = 0;
-            Date    created             = getDate(row, col++);
-            Date    updated             = getDate(row, col++);
-            Date    validFrom           = getDate(row, col++);
-            Date    validTo             = getDate(row, col++);
-            Integer area1Id             = getInt(row, col++);
-            String  area1En             = getString(row, col++);
-            String  area1Da             = getString(row, col++);
-            Integer area2Id             = getInt(row, col++);
-            String  area2En             = getString(row, col++);
-            String  area2Da             = getString(row, col++);
-            Integer area3Id             = getInt(row, col++);
-            String  area3En             = getString(row, col++);
-            String  area3Da             = getString(row, col++);
-            String  descriptionEn       = getString(row, col++);
-            String  descriptionDa       = getString(row, col++);
-            Integer infoType            = getInt(row, col);
+            Date created = getDate(row, col++);
+            Date updated = getDate(row, col++);
+            Date validFrom = getDate(row, col++);
+            Date validTo = getDate(row, col++);
+            Integer area1Id = getInt(row, col++);
+            String area1En = getString(row, col++);
+            String area1Da = getString(row, col++);
+            Integer area2Id = getInt(row, col++);
+            String area2En = getString(row, col++);
+            String area2Da = getString(row, col++);
+            Integer area3Id = getInt(row, col++);
+            String area3En = getString(row, col++);
+            String area3Da = getString(row, col++);
+            String descriptionEn = getString(row, col++);
+            String descriptionDa = getString(row, col++);
+            Integer infoType = getInt(row, col);
 
             // For the first row, create and initialize the message
             if (message == null) {
@@ -920,7 +947,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Formats the time interval for firing exercises
      *
-     * @param msg the message
+     * @param msg  the message
      * @param lang the language
      */
     private void formatFiringExerciseTime(Message msg, String lang) {
@@ -939,9 +966,9 @@ public class DkMsiProviderService extends AbstractProviderService {
     /**
      * Append the description to the message description field
      *
-     * @param msg the message
-     * @param lang the language
-     * @param subtitle an optional subtitle
+     * @param msg         the message
+     * @param lang        the language
+     * @param subtitle    an optional subtitle
      * @param description the description to append
      */
     private void appendDescription(Message msg, String lang, String subtitle, String description) {
@@ -961,7 +988,7 @@ public class DkMsiProviderService extends AbstractProviderService {
      * Creates an Area template based on the given Danish and English name
      * and optionally a parent Area
      *
-     * @param id the id of the area
+     * @param id     the id of the area
      * @param nameEn English name
      * @param nameDa Danish name
      * @param parent parent area
@@ -987,7 +1014,7 @@ public class DkMsiProviderService extends AbstractProviderService {
      * Creates an Category template based on the given Danish and English name
      * and optionally a parent Category
      *
-     * @param id the id of the category
+     * @param id     the id of the category
      * @param nameEn English name
      * @param nameDa Danish name
      * @param parent parent area
@@ -1010,23 +1037,23 @@ public class DkMsiProviderService extends AbstractProviderService {
     }
 
     private String getString(Object[] row, int index) {
-        return (String)row[index];
+        return (String) row[index];
     }
 
     private Integer getInt(Object[] row, int index) {
-        return (row[index] != null && row[index] instanceof BigInteger) ? (Integer)((BigInteger)row[index]).intValue() : (Integer)row[index];
+        return (row[index] != null && row[index] instanceof BigInteger) ? (Integer) ((BigInteger) row[index]).intValue() : (Integer) row[index];
     }
 
     private Double getDouble(Object[] row, int index) {
-        return (Double)row[index];
+        return (Double) row[index];
     }
 
     private Date getDate(Object[] row, int index) {
-        return (Date)row[index];
+        return (Date) row[index];
     }
 
     private Boolean getBoolean(Object[] row, int index) {
-        return (Boolean)row[index];
+        return (Boolean) row[index];
     }
 
 }

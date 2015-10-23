@@ -1,6 +1,8 @@
+#!/usr/bin/env bash
 #
 # Fetches legacy MSI data and imports them into the oldmsi database
 #
+while [ true ]; do
 
 echo "Running legacy MSI import at `date`"
 
@@ -17,3 +19,7 @@ rm -f /tmp/msi-safe-dump.sql.gz
 
 echo ""
 
+# update the database every 15 mins
+sleep 15m
+
+done

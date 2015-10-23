@@ -1,7 +1,6 @@
 FROM nginx:latest
 
-RUN rm /etc/nginx/sites-enabled/default
-RUN cp default /etc/nginx/sites-enabled/default
+ADD default /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 EXPOSE 443

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Fetches legacy MSI data and imports them into the oldmsi database
 #

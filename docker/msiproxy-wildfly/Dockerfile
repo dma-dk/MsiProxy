@@ -3,7 +3,6 @@ FROM java:8
 # Set the WILDFLY_VERSION env variable
 ENV WILDFLY_VERSION 8.2.0.Final
 
-
 # Add files used for configuring wildfly
 ADD install-wildfly-pom.xml /
 ADD standalone.xml /
@@ -25,10 +24,6 @@ RUN cp /mysql-connector-java-5.1.30-bin.jar /wildfly/modules/com/mysql/main/
 RUN cp /msiproxy-web.war /wildfly/standalone/deployments/
 RUN chmod +x /wildfly/bin/*.sh
 
-# Set up management port
-RUN /wildfly/bin/add-user.sh ci "MANAGEMENT_PWD" --silent
-
-
 # Expose the ports we're interested in
 EXPOSE 8080
 EXPOSE 9990
@@ -36,3 +31,4 @@ EXPOSE 9990
 # Set the default command to run on boot
 # This will boot WildFly in the standalone mode and bind to all interface
 CMD ["/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
+

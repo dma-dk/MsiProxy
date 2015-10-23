@@ -1,3 +1,7 @@
+upstream wildfly {
+   server localhost:8080;
+}
+
 server {
   listen 80;
   listen 443 ssl;
@@ -9,6 +13,6 @@ server {
   access_log /var/log/nginx/msi-proxy.access.log;
 
   location / {
-    proxy_pass http://localhost:8080;
+    proxy_pass http://wildfly;
   }
 }

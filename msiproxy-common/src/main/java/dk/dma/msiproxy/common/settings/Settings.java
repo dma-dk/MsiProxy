@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -83,6 +84,13 @@ public class Settings {
 
         // If a corresponding system property is set, it takes precedence
         result = System.getProperty(setting.getSettingName());
+
+        // Check if it has been defined in the environment
+        if (result == null) {
+            Map<String,String> sysmap=System.getenv();
+            String t=setting.getSettingName();
+            result = System.getenv(setting.getSettingName());
+        }
 
         // Check if it has been defined in the properties file
         if (result == null) {

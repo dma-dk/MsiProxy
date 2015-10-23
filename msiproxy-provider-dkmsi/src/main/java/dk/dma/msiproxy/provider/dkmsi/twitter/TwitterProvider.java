@@ -3,6 +3,7 @@ package dk.dma.msiproxy.provider.dkmsi.twitter;
 import dk.dma.msiproxy.common.settings.DefaultSetting;
 import dk.dma.msiproxy.common.settings.Setting;
 import dk.dma.msiproxy.common.settings.Settings;
+import org.slf4j.Logger;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
@@ -20,10 +21,10 @@ import javax.inject.Inject;
 @Lock(LockType.READ)
 public class TwitterProvider {
 
-    public static final Setting API_KEY = new DefaultSetting("publishTwitterApiKey", "CqgrxkIiBA3sC35TmoZ5F5Oru");
-    public static final Setting API_SECRET = new DefaultSetting("publishTwitterApiSecret", "xZXl9vsW3LCtX1Py6U2VqYUmyAK0GGYZ4RINFyXgNwV7PPcQip");
-    public static final Setting ACCESS_TOKEN = new DefaultSetting("publishTwitterAccessToken", "2829892014-kqkkQLD88xhfakDlbxY0rUPdRA72Nw14e6KED0n");
-    public static final Setting ACCESS_TOKEN_SECRET = new DefaultSetting("publishTwitterAccessTokenSecret", "9brE9Ed6qak2UqluvvVG1CAShqaeezEUv5pqdQ5QZQlAG");
+    public static Setting TWITTER_API_KEY = new DefaultSetting("publishTwitterApiKey", "CqgrxkIiBA3sC35TmoZ5F5Oru");
+    public static Setting TWITTER_API_SECRET = new DefaultSetting("publishTwitterApiSecret", "xZXl9vsW3LCtX1Py6U2VqYUmyAK0GGYZ4RINFyXgNwV7PPcQip");
+    public static Setting TWITTER_ACCESS_TOKEN = new DefaultSetting("publishTwitterAccessToken", "2829892014-kqkkQLD88xhfakDlbxY0rUPdRA72Nw14e6KED0n");
+    public static Setting TWITTER_ACCESS_TOKEN_SECRET = new DefaultSetting("publishTwitterAccessTokenSecret", "9brE9Ed6qak2UqluvvVG1CAShqaeezEUv5pqdQ5QZQlAG");
 
     public static final int MAX_TWEET_LENGTH = 140;
 
@@ -50,10 +51,14 @@ public class TwitterProvider {
         Twitter twitter = twitterFactory.getInstance();
 
         //setup OAuth Consumer Credentials
-        twitter.setOAuthConsumer(settings.get(API_KEY), settings.get(API_SECRET));
+        String twitterApiKey=settings.get(TWITTER_API_KEY);
+        String twitterApiSecret=settings.get(TWITTER_API_SECRET);
+        twitter.setOAuthConsumer(twitterApiKey, twitterApiSecret);
 
         //setup OAuth Access Token
-        twitter.setOAuthAccessToken(new AccessToken(settings.get(ACCESS_TOKEN), settings.get(ACCESS_TOKEN_SECRET)));
+        String twitterAccessToken=settings.get(TWITTER_ACCESS_TOKEN);
+        String twitterAccessTokenSecret=settings.get(TWITTER_ACCESS_TOKEN_SECRET);
+        twitter.setOAuthAccessToken(new AccessToken(twitterAccessToken, twitterAccessTokenSecret));
 
         return twitter;
     }

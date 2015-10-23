@@ -30,7 +30,8 @@ import java.util.Date;
 @Table(name = "tweet")
 @NamedQueries({
         @NamedQuery(name = "Tweet.findAll", query = "SELECT n FROM Tweet n"),
-        @NamedQuery(name = "Tweet.findByMessageId", query = "SELECT n FROM Tweet n where messageId = :messageId")
+        @NamedQuery(name = "Tweet.findByMessageId", query = "SELECT n FROM Tweet n where n.messageId = :messageId"),
+        @NamedQuery(name = "Tweet.findByTwitterId", query = "SELECT n.twitterId FROM Tweet n where n.twitterId = :twitterId")
 })
 public class Tweet
 {
