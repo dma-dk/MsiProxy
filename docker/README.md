@@ -68,6 +68,9 @@ Start Wildfly
 Deploy to wildfly
 =================
 
+This procedure is complicated by the fact that wildfly is running inside a container. Instead update the docker module
+with the new war.
+
 From the msiproxy-web module, execute
 
     mvn wildfly:deploy -Dwildfly.hostname=<<docker up>> -Dwildfly.port=9990 -Dwildfly.username=ci -Dwildfly.password=<<PWD>>
