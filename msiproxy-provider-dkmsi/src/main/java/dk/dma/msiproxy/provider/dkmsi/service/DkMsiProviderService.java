@@ -780,7 +780,7 @@ public class DkMsiProviderService extends AbstractProviderService {
     private void formatFiringExerciseTime(Message msg, String lang) {
         try {
             String format = "da".equals(lang) ? "d MMMM yyyy, 'kl.' HH:mm" : "d MMMM yyyy, 'hours' HH:mm";
-            if (TimeUtils.sameDate(msg.getValidFrom(), msg.getValidTo())) {
+            if (sameDate(msg.getValidFrom(), msg.getValidTo())) {
                 SimpleDateFormat sdf1 = new SimpleDateFormat(format, new Locale(lang));
                 SimpleDateFormat sdf2 = new SimpleDateFormat("HH:mm");
                 msg.getDesc(lang).setTime(String.format("%s - %s", sdf1.format(msg.getValidFrom()), sdf2.format(msg.getValidTo())));
@@ -788,6 +788,23 @@ public class DkMsiProviderService extends AbstractProviderService {
         } catch (Exception e) {
             log.warn("Failed formatting time for message " + msg + ": " + e);
         }
+    }
+
+    /**
+     * Firing exercises, where the toDate is 00:00 of the following date is considered the same date
+     * @param fromDate the from date
+     * @param toDate the to date
+     * @return the the two dates are on the same day
+     */
+    private boolean sameDate(Date fromDate, Date toDate) {
+        if (TimeUtils.sameDate(fromDate, toDate)) {
+            return true;
+        } else if (fromDate != null && toDate != null) {
+            // Try to subtract a millisecond from toDate and see if it is the same date
+            Date toDate2 = new Date(toDate.getTime() - 1);
+            return TimeUtils.sameDate(fromDate, toDate2);
+        }
+        return false;
     }
 
     /**
