@@ -494,7 +494,7 @@ public class DkMsiProviderService extends AbstractProviderService {
             Integer pointIndex      = getInt(row, col++);
             Double pointLatitude    = getDouble(row, col++);
             Double pointLongitude   = getDouble(row, col++);
-            Integer pointRadius     = getInt(row, col);
+            Double pointRadius      = getDouble(row, col);
 
             // If the type of the location is POINT, there must only be one point per location
             if (location.getType() == LocationType.POINT && location.checkCreatePoints().size() > 0) {
@@ -503,7 +503,7 @@ public class DkMsiProviderService extends AbstractProviderService {
                 message.getLocations().add(location);
             }
 
-            location.setRadius(pointRadius);
+            location.setRadius(pointRadius != null ? (int)Math.round(pointRadius) : null);
 
             // Create the current point
             Point pt = new Point();
