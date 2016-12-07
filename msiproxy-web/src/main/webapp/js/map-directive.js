@@ -82,18 +82,6 @@ angular.module('msiproxy.app')
                         displayInLayerSwitcher: false
                     }));
 
-                    // NB WMS layer gets proxied via "/wms/" to mask out colors and hide service-name, login and password
-                    // For direct access, substitute "/wms/" with: http://kortforsyningen.kms.dk/
-                    layers.push(new OpenLayers.Layer.WMS("WMS", "/wms/", {
-                            layers : 'cells',
-                            transparent : 'true',
-                            styles : 'default'
-                        }, {
-                            isBaseLayer : false,
-                            visibility : false,
-                            projection : 'EPSG:3857'
-                        }));
-
                     // Add the MSI layer
                     layers.push(msiLayer);
 
@@ -111,12 +99,6 @@ angular.module('msiproxy.app')
                         zoom: zoom
                     });
 
-
-                    // Show a layer switcher
-                    // TODO: Pass the layer switcher id as an attribute to the directive. This is a hack...
-                    map.addControl(new OpenLayers.Control.LayerSwitcher({
-                        'div' : OpenLayers.Util.getElement((scope.interactive) ? 'msi-layerswitcher' : 'msi-details-layerswitcher')
-                    }));
 
                     // Add zoom buttons
                     map.addControl(new OpenLayers.Control.Zoom());

@@ -30,11 +30,6 @@
             <artifactId>msiproxy-provider-dkmsi</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>dk.dma.msiproxy</groupId>
-            <artifactId>msiproxy-provider-dkmsinm</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>

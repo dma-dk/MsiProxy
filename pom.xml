@@ -172,7 +172,6 @@
         <module>msiproxy-model</module>
         <module>msiproxy-common</module>
         <module>msiproxy-provider-dkmsi</module>
-        <module>msiproxy-provider-dkmsinm</module>
         <module>msiproxy-web</module>
     </modules>
 

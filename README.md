@@ -4,10 +4,9 @@ The MSI-Proxy provides a single point of entry for accessing the list of active 
 
 ## Providers ##
 
-At the time of writing, the MSI-Proxy defines two MSI providers:
+At the time of writing, the MSI-Proxy defines one MSI provider:
 
 * [msiproxy-provider-dkmsi](msiproxy-provider-dkmsi): provides MSI messages from the Danish legacy MSI-admin production system.
-* [msiproxy-provider-dkmsinm](msiproxy-provider-dkmsinm): provides MSI messages from the Danish test MSI-NM system.
 
 ## Interfaces ##
 
@@ -18,7 +17,7 @@ A simple server-side generated HTML page is available at the URI:
 
     /details.html?provider=<<PROVIDER>>&lang=<<LANG>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+Where *provider* is one of the available providers, i.e. "dkmsi",
 and *lang* is one of the supported languages, i.e. "da" or "en".
 
 The page can e.g. be used in an iframe, and since it is fairly simple and completely generated on the server side, it should be backwards compatible with most browsers.
@@ -35,7 +34,7 @@ A more sophisticated AngularJS based single page application is available at the
 
     /index.html#/<<PROVIDER>>/<<LANG>>/<<VIEWMODE>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+Where *provider* is one of the available providers, i.e. "dkmsi",
 and *lang* is one of the supported languages, i.e. "da" or "en".
 *View mode* is either "details" or "map", and defines how the messages are displayed.
 
@@ -60,7 +59,7 @@ The REST API has the URI format:
 
     /rest/<<PROVIDER>>/<<VERSION>>/service/messages?<<PARAMETERS>>
 
-Where *provider* is one of the available providers, i.e. "dkmsi" or "dkmsinm" (or indeed a colon-separated list of providers, such as "dkmsi:dkmsinm"),
+Where *provider* is one of the available providers, i.e. "dkmsi",
 and *version* is the API version, currently "v1".
 The *parameters* are described below:
 

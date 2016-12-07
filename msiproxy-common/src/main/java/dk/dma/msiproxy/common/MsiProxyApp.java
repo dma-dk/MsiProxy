@@ -26,7 +26,7 @@ import javax.ejb.Singleton;
 import javax.inject.Inject;
 
 /**
- * Common settings and functionality for the MsiNm app
+ * Common settings and functionality for the MsiProxy app
  */
 @Singleton
 @Lock(LockType.READ)
